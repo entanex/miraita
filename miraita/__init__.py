@@ -7,3 +7,4 @@ from . import listeners as listeners
 from .version import __version__ as __version__
 
 load_plugins("miraita/plugins")
+load_plugins("miraita/providers")

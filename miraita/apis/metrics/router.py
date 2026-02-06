@@ -2,7 +2,7 @@ from arclet.entari import keeping
 from fastapi import APIRouter, Response
 from prometheus_client import generate_latest, REGISTRY, CONTENT_TYPE_LATEST
 
-from miraita.plugins.prometheus import Counter  # entari: plugin
+from miraita.providers.prometheus import Counter  # entari: plugin
 
 router = APIRouter(tags=["Metrics"])
 
