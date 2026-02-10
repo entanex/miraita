@@ -15,3 +15,5 @@ metadata(
 
 
 global_providers.extend([ArgotProvider()])
+
+__all__ = ["Argot", "on_argot"]
