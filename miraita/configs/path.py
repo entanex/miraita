@@ -16,6 +16,8 @@ IMAGE_DIR = RESOURCE_DIR / "images"
 """图片保存目录"""
 FONT_DIR = RESOURCE_DIR / "fonts"
 """字体保存目录"""
+STICKER_DIR = RESOURCE_DIR / "stickers"
+"""表情包保存目录"""
 TEMPLATE_DIR = RESOURCE_DIR / "templates"
 """模板保存目录"""
 
