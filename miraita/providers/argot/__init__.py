@@ -1,5 +1,4 @@
 from arclet.entari import metadata
-from arclet.entari.core import global_providers
 
 from . import listener as listener
 from .element import Argot as Argot
@@ -12,8 +11,5 @@ metadata(
     description="暗语消息",
     classifier=["服务"],
 )
-
-
-global_providers.extend([ArgotProvider()])
 
 __all__ = ["Argot", "on_argot"]

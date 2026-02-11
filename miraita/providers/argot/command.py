@@ -1,35 +1,37 @@
-from typing import overload
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
+from typing import overload, TypeAlias, TypeVar
 
 from arclet.alconna import Alconna
-from arclet.alconna.tools.construct import alconna_from_format
+from arclet.letoderea import Subscriber
+from arclet.entari import MessageChain, command
 
-from arclet.entari import Plugin
-from arclet.entari.command.plugin import AlconnaPluginDispatcher
+from .provider import ArgotProvider
+
+
+_BaseM: TypeAlias = str | MessageChain | None
+_M: TypeAlias = (
+    _BaseM
+    | Generator[_BaseM, None, None]
+    | AsyncGenerator[_BaseM, None]
+    | Awaitable[_BaseM]
+)
+TM = TypeVar("TM", bound=_M)
 
 
 @overload
-def on_argot(cmd: str) -> AlconnaPluginDispatcher: ...
+def on_argot(cmd: str) -> Callable[[Callable[..., TM]], Subscriber[TM]]: ...
 
 
 @overload
-def on_argot(cmd: Alconna) -> AlconnaPluginDispatcher: ...
+def on_argot(cmd: Alconna) -> Callable[[Callable[..., TM]], Subscriber[TM]]: ...
 
 
-def on_argot(cmd: str | Alconna) -> AlconnaPluginDispatcher:
+def on_argot(cmd: str | Alconna) -> Callable[[Callable[..., TM]], Subscriber[TM]]:
     if isinstance(cmd, str):
-        _command = alconna_from_format(cmd)
+        _command = command.command(cmd, providers=[ArgotProvider])
+        _command.meta.hide = True
     else:
-        _command = cmd
+        cmd.meta.hide = True
+        _command = command.on(cmd, providers=[ArgotProvider])
 
-    _command.meta.hide = True
-
-    if not (plugin := Plugin.current()):
-        raise LookupError("no plugin context found")
-
-    return AlconnaPluginDispatcher(
-        plugin,
-        _command,
-        False,
-        False,
-        True,
-    )
+    return _command
