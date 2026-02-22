@@ -1,4 +1,4 @@
-from satori.model import MessageReceipt
+from satori.model import MessageObject
 from arclet.entari import MessageChain, Plugin, Session
 
 from .element import Argot
@@ -9,7 +9,7 @@ plugin = Plugin.current()
 
 @plugin.use("::after_send")
 async def _save_argot(
-    result: list[MessageReceipt], session: Session | None = None
+    result: list[MessageObject], session: Session | None = None
 ) -> None:
     if session is None:
         return

@@ -2,7 +2,7 @@ from arclet.entari.plugin import get_plugin_subscribers
 from arclet.entari import Session, Plugin, MessageCreatedEvent, MessageChain
 
 from satori.client import Account
-from satori.model import LoginStatus, MessageReceipt
+from satori.model import LoginStatus, MessageObject
 
 from .metrics import (
     miraita_start_at_gauge,
@@ -42,7 +42,7 @@ async def on_after_send(
     account: Account,
     channel: str,
     message: MessageChain,
-    result: list[MessageReceipt],
+    result: list[MessageObject],
     session: "Session | None" = None,
 ):
     if session is None:
