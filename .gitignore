@@ -10,6 +10,6 @@ wheels/
 .venv
 
 # miraita
+.env
 .miraita/data
 miraita.db
-entari.yml
