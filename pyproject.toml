@@ -28,6 +28,10 @@ dev = [
     "satori-python-adapter-satori>=0.1.0",
     "rich>=14.1.0",
 ]
+llm = [
+    "docstring-parser>=0.17.0",
+    "litellm>=1.81.14",
+]
 
 [tool.uv.build-backend]
 module-root = ""
