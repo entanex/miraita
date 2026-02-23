@@ -1,10 +1,10 @@
 import random
 
 from arclet.alconna import Alconna, CommandMeta
-from arclet.entari import metadata, command, Session, At, Image, MessageChain
+from arclet.entari import metadata, command, scheduler, Session, At, Image, MessageChain
 
 from .config import Config, config
-from .data_source import get_waifu_data, save_waifu_data
+from .data_source import clear_waifu_data, get_waifu_data, save_waifu_data
 
 metadata(
     name="娶群友",
@@ -60,3 +60,8 @@ async def _(session: Session):
     await save_waifu_data(session.user.id, member.user.id)
 
     await session.send(msg)
+
+
+@scheduler.cron("0 0 * * *")
+async def refresh():
+    await clear_waifu_data()
