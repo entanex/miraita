@@ -8,7 +8,7 @@ from .data_source import get_waifu_data, save_waifu_data
 
 metadata(
     name="娶群友",
-    author=["Komorebi <mute231010@gmail.com>"],
+    author=[{"name": "Komorebi", "email": "mute231010@gmail.com"}],
     description="随机抽取群友做老婆",
     classifier=["娱乐"],
     config=Config,

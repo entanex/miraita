@@ -5,7 +5,7 @@ from .drawer import draw
 
 metadata(
     name="服务器状态",
-    author=["Komorebi <mute231010@gmail.com>"],
+    author=[{"name": "Komorebi", "email": "mute231010@gmail.com"}],
     description="查看服务器状态",
     classifier=["工具"],
 )
