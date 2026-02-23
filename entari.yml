@@ -23,6 +23,8 @@ plugins:
   .record_message:
     record_send: true
 
+  .scheduler: {}
+
   .localdata:
     app_name: miraita
 
