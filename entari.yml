@@ -13,7 +13,6 @@ basic:
     save: false
     rich_error: false
     short_level: true
-  external_dirs: ["miraita/plugins", "miraita/providers"]
 
 plugins:
   $files: []
@@ -37,7 +36,7 @@ plugins:
     driver: aiosqlite
 
   miraita: {}
-  miraita.plugins.llm:
+  ?miraita.plugins.llm:
     api_key: ${{ env.OPENAI_API_KEY }}
     base_url: https://api.openai.com/v1
     models:
