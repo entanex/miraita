@@ -10,11 +10,11 @@ from arclet.letoderea.typing import Contexts, generate_contexts
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select
 
-from .._types import Message
-from ..events.tools import LLMToolEvent, available_functions, tools
-from ..log import logger
-from ..model import LLMSession, SessionContext
-from ..service import llm
+from miraita.providers.llm._types import Message
+from miraita.providers.llm.events.tools import LLMToolEvent, available_functions
+from miraita.providers.llm.log import logger
+from miraita.providers.llm.model import LLMSession, SessionContext
+from miraita.providers.llm.service import llm
 
 
 class LLMSessionManager:
@@ -241,8 +241,6 @@ class LLMSessionManager:
                 messages,
                 stream=False,
                 model=model,
-                tools=tools,
-                tool_choice="auto",
                 user=session.user.name,
             )
 

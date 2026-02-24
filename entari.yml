@@ -38,7 +38,7 @@ plugins:
     driver: aiosqlite
 
   miraita: {}
-  ?miraita.plugins.llm:
+  ?miraita.providers.llm:
     api_key: ${{ env.OPENAI_API_KEY }}
     base_url: https://api.openai.com/v1
     models:
