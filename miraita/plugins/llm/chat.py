@@ -7,7 +7,8 @@ from arclet.entari.event.send import SendResponse
 from arclet.letoderea import BLOCK, on
 from arclet.letoderea.typing import Contexts
 
-from ..config import Config, _conf
+from miraita.providers.llm.config import Config, _conf
+
 from .manager import LLMSessionManager
 
 RECORD = deque(maxlen=16)

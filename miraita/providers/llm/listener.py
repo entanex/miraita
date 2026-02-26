@@ -1,13 +1,13 @@
 from arclet.entari.event.lifespan import Ready
 from arclet.letoderea import on
 
-from .._jsondata import get_default_model, set_default_model
-from ..config import _conf
-from ..log import logger
+from .log import logger
+from .config import _conf
+from ._jsondata import get_default_model, set_default_model
 
 
 @on(Ready)
-async def _():
+async def check():
     if not _conf.models:
         set_default_model(None)
         logger.warning("未配置任何模型，已清空本地默认模型配置")
