@@ -10,17 +10,12 @@ dependencies = [
     "entari-plugin-server>=0.2.3",
     "fastapi>=0.116.1",
     "pillow>=11.3.0",
-    "prometheus-client>=0.22.1",
     "psutil>=7.0.0",
     "py-cpuinfo>=9.0.0",
 ]
 
-[tool.uv.sources]
-nekobox = { git = "https://github.com/wyapx/nekobox" }
-
 [dependency-groups]
 dev = [
-    "nekobox",
     "pre-commit>=4.2.0",
     "ruff>=0.12.7",
     "email-validator>=2.2.0",
@@ -31,6 +26,9 @@ dev = [
 llm = [
     "docstring-parser>=0.17.0",
     "litellm>=1.81.14",
+]
+prometheus = [
+    "prometheus-client>=0.22.1",
 ]
 
 [tool.uv.build-backend]
