@@ -1,1 +1,1 @@
-from . import send_hook as send_hook
+from . import message_decorator as message_decorator

@@ -5,28 +5,30 @@ description = "基于 Entari 开发，超可爱的林汐酱"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "arclet-entari[full,pydantic]>=0.16.4",
+    "arclet-entari[full,pydantic]>=0.17.0rc3",
     "entari-plugin-database>=0.2.1",
     "entari-plugin-server>=0.2.3",
     "fastapi>=0.116.1",
     "pillow>=11.3.0",
-    "prometheus-client>=0.22.1",
     "psutil>=7.0.0",
     "py-cpuinfo>=9.0.0",
 ]
 
-[tool.uv.sources]
-nekobox = { git = "https://github.com/wyapx/nekobox" }
-
 [dependency-groups]
 dev = [
-    "nekobox",
     "pre-commit>=4.2.0",
     "ruff>=0.12.7",
     "email-validator>=2.2.0",
     "satori-python-adapter-onebot11>=0.1.0",
     "satori-python-adapter-satori>=0.1.0",
     "rich>=14.1.0",
+]
+llm = [
+    "docstring-parser>=0.17.0",
+    "litellm>=1.81.14",
+]
+prometheus = [
+    "prometheus-client>=0.22.1",
 ]
 
 [tool.uv.build-backend]

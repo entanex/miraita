@@ -9,7 +9,7 @@ from arclet.entari.plugin import get_plugins
 from arclet.entari import __version__ as __entari_version__
 
 from miraita import __version__ as __miraita_version__
-from miraita.plugins.prometheus import get_system_metrics
+from miraita.providers.prometheus import get_system_metrics  # entari: plugin
 
 from .model import get_status_info
 from .utils import truncate_string

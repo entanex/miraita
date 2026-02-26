@@ -1,0 +1,53 @@
+basic:
+  network:
+    - type: ws
+      host: localhost
+      port: 5141
+      path: satori
+
+  prefix: ["/"]
+  ignore_self_message: true
+  log:
+    level: debug
+    ignores: ["aiosqlite.core", "httpcore._trace"]
+    save: false
+    rich_error: false
+    short_level: true
+
+plugins:
+  $files: []
+
+  $prelude:
+    - ::auto_reload
+
+  .record_message:
+    record_send: true
+
+  .scheduler: {}
+
+  .localdata:
+    app_name: miraita
+
+  ::auto_reload:
+    watch_dirs: [.]
+    watch_config: true
+
+  database:
+    type: sqlite
+    name: miraita.db
+    driver: aiosqlite
+
+  miraita: {}
+  ?miraita.providers.llm:
+    api_key: ${{ env.OPENAI_API_KEY }}
+    base_url: https://api.openai.com/v1
+    models:
+      - name: "deepseek/deepseek-chat"
+        api_key: ${{ env.DEEPSEEK_API_KEY }}
+        base_url: https://api.deepseek.com
+      - name: "gpt-4.1-mini"
+        alias: "gpt"
+      - name: "gemini/gemini-pro"
+        alias: "gemini"
+        api_key: ${{ env.GEMINI_API_KEY }}
+        base_url: https://generativelanguage.googleapis.com
