@@ -39,3 +39,9 @@ async def save_waifu_data(user_id: str, waifu_id: str) -> None:
 
     with open(file, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+async def clear_waifu_data() -> None:
+    file = local_data.get_data_file("waifu", "data.json")
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump({}, f, ensure_ascii=False, indent=2)
