@@ -70,7 +70,6 @@ async def _(
     if not user_input:
         resp = await session.prompt("需要我为你做些什么？")
         if not resp:
-            await session.send("等待超时")
             return BLOCK
         user_input = resp.extract_plain_text()
 
