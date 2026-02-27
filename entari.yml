@@ -32,6 +32,11 @@ plugins:
     watch_dirs: [.]
     watch_config: true
 
+  browser:
+    browser_type: chromium
+    channel: chrome
+    headless: true
+
   database:
     type: sqlite
     name: miraita.db
@@ -43,6 +48,14 @@ plugins:
     token: miraita1234
 
   miraita: {}
+
+  ?miraita.plugins.wakatime:
+    client_id: ${{ env.CLIENT_ID }}
+    client_secret: ${{ env.CLIENT_SECRET }}
+    register_route: /register
+    redirect_uri: ${{ env.REDIRECT_URI }}
+    background_source: Lolicon
+
   ?miraita.providers.llm:
     api_key: ${{ env.OPENAI_API_KEY }}
     base_url: https://api.openai.com/v1
