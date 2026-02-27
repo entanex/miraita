@@ -32,10 +32,6 @@ from .constant import (
 nickname = "Miraita"
 system = platform.uname()
 
-adlam_fnt = ImageFont.truetype(str(adlam_font_path), 36)
-spicy_fnt = ImageFont.truetype(str(spicy_font_path), 38)
-baotu_fnt = ImageFont.truetype(str(baotu_font_path), 64)
-
 
 def draw() -> bytes:
     loaded_plugins = [
@@ -43,6 +39,10 @@ def draw() -> bytes:
         for plugin in get_plugins()
         if plugin.id.startswith(("miraita.plugins.", "arclet.entari.builtins."))
     ]
+
+    adlam_fnt = ImageFont.truetype(str(adlam_font_path), 36)
+    spicy_fnt = ImageFont.truetype(str(spicy_font_path), 38)
+    baotu_fnt = ImageFont.truetype(str(baotu_font_path), 64)
 
     with Image.open(bg_img_path).convert("RGBA") as base:
         img = Image.new("RGBA", base.size, (0, 0, 0, 0))

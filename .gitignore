@@ -11,5 +11,5 @@ wheels/
 
 # miraita
 .env
-.miraita/data
+.miraita/
 miraita.db
