@@ -1,5 +1,5 @@
 from arclet.entari.plugin import get_plugin_subscribers
-from arclet.entari import Session, Plugin, MessageCreatedEvent, MessageChain
+from arclet.entari import Channel, Session, Plugin, MessageCreatedEvent, MessageChain
 
 from satori.client import Account
 from satori.model import LoginStatus, MessageObject
@@ -40,7 +40,7 @@ async def on_message_created(session: Session):
 @plugin.use("::after_send")
 async def on_after_send(
     account: Account,
-    channel: str,
+    channel: Channel,
     message: MessageChain,
     result: list[MessageObject],
     session: "Session | None" = None,
