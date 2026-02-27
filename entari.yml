@@ -2,7 +2,7 @@ basic:
   network:
     - type: ws
       host: localhost
-      port: 5141
+      port: 5140
       path: satori
 
   prefix: ["/"]
@@ -36,6 +36,11 @@ plugins:
     type: sqlite
     name: miraita.db
     driver: aiosqlite
+
+  server:
+    host: 0.0.0.0
+    port: 2310
+    token: miraita1234
 
   miraita: {}
   ?miraita.providers.llm:
