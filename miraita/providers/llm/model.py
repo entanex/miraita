@@ -12,7 +12,7 @@ ROLE: TypeAlias = Literal["user", "assistant", "tool"]
 
 
 class LLMSession(Base):
-    __tablename__ = "entari_plugin_llm_session"
+    __tablename__ = "llm_session"
 
     session_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     user_id: Mapped[str] = mapped_column(String(64), index=True)
@@ -28,11 +28,11 @@ class LLMSession(Base):
 
 
 class SessionContext(Base):
-    __tablename__ = "entari_plugin_llm_context"
+    __tablename__ = "llm_context"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     session_id: Mapped[str] = mapped_column(
-        String(64), ForeignKey("entari_plugin_llm_session.session_id"), index=True
+        String(64), ForeignKey("llm_session.session_id"), index=True
     )
 
     role: Mapped[ROLE] = mapped_column(String(16))
