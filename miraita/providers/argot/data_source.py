@@ -73,11 +73,6 @@ async def _save_all_argot(data: list[ArgotData]):
         json.dump(serializable_data, f, ensure_ascii=False, indent=2)
 
 
-async def get_argot_by_name(name: str) -> ArgotData | None:
-    all_argot = await _load_all_argot()
-    return next((a for a in all_argot if a.name == name), None)
-
-
 async def get_argot_by_message_id(message_id: str) -> ArgotData | None:
     all_argot = await _load_all_argot()
     return next((a for a in all_argot if a.message_id == message_id), None)
