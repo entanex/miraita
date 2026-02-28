@@ -9,7 +9,7 @@ from arclet.entari.event.base import (
     GuildMemberRequestEvent,
 )
 
-from miraita.providers.argot import Argot, on_argot
+from miraita.providers.argot import Argot, on_argot, on_reaction
 
 from . import filter
 
@@ -72,6 +72,7 @@ async def guild_member_request(session: Session[GuildMemberRequestEvent]):
 
 
 @on_argot("approve")
+@on_reaction(["124", "424"])
 async def _(argot: Argot, session: Session):
     message_id = argot.data.get("message_id")
     if message_id is None:
@@ -81,6 +82,7 @@ async def _(argot: Argot, session: Session):
 
 
 @on_argot("refuse [comment:str]")
+@on_reaction(["123"])
 async def _(comment: Match[str], argot: Argot, session: Session):
     message_id = argot.data.get("message_id")
     if message_id is None:

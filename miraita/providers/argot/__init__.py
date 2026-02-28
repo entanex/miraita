@@ -3,6 +3,7 @@ from arclet.entari import metadata
 from . import listener as listener
 from .element import Argot as Argot
 from .command import on_argot as on_argot
+from .command import on_reaction as on_reaction
 from .provider import ArgotProvider as ArgotProvider
 
 metadata(
@@ -12,4 +13,4 @@ metadata(
     classifier=["服务"],
 )
 
-__all__ = ["Argot", "on_argot"]
+__all__ = ["Argot", "on_argot", "on_reaction"]

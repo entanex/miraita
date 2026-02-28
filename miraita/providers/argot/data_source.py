@@ -43,7 +43,22 @@ async def _load_all_argot() -> list[ArgotData]:
             raw_data = json.load(f)
             if not isinstance(raw_data, list):
                 return []
-            return [ArgotData(**item) for item in raw_data]
+
+            all_argot: list[ArgotData] = []
+            has_invalid_data = False
+            for item in raw_data:
+                argot = ArgotData(**item)
+
+                if argot.is_expired:
+                    has_invalid_data = True
+                    continue
+
+                all_argot.append(argot)
+
+            if has_invalid_data:
+                await _save_all_argot(all_argot)
+
+            return all_argot
     except (FileNotFoundError, json.JSONDecodeError, TypeError):
         return []
 
@@ -70,13 +85,7 @@ async def get_argot_by_message_id(message_id: str) -> ArgotData | None:
 
 async def save_argot(argot: ArgotData) -> None:
     all_argot = await _load_all_argot()
-
-    for i, existing in enumerate(all_argot):
-        if existing.name == argot.name:
-            all_argot[i] = argot
-            break
-    else:
-        all_argot.append(argot)
+    all_argot.append(argot)
 
     await _save_all_argot(all_argot)
 
