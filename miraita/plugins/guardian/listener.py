@@ -2,7 +2,6 @@ from contextlib import suppress
 from json import JSONDecodeError
 
 from arclet.entari import plugin, At, Text, Image, Session, MessageChain
-from arclet.entari.command import Match
 from arclet.entari.event.base import (
     GuildMemberAddedEvent,
     GuildMemberRemovedEvent,
@@ -83,12 +82,10 @@ async def _(argot: Argot, session: Session):
 
 @on_argot("refuse [comment:str]")
 @on_reaction(["123"])
-async def _(comment: Match[str], argot: Argot, session: Session):
+async def _(argot: Argot, session: Session, comment: str = ""):
     message_id = argot.data.get("message_id")
     if message_id is None:
         return
 
     with suppress(JSONDecodeError):
-        await session.account.guild_member_approve(
-            message_id, False, comment.result or ""
-        )
+        await session.account.guild_member_approve(message_id, False, comment)
