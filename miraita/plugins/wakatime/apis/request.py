@@ -22,10 +22,10 @@ def _get_http_client():
 
 
 class API:
-    _access_token_cache: dict[str, str] = {}
+    _access_token_cache: dict[int, str] = {}
 
     @classmethod
-    async def get_access_token(cls, user_id: str) -> str:
+    async def get_access_token(cls, user_id: int) -> str:
         if user_id in cls._access_token_cache:
             return cls._access_token_cache[user_id]
 
@@ -61,7 +61,7 @@ class API:
             raise BindUserException("bind failed: access_token not found") from exc
 
     @classmethod
-    async def revoke_user_token(cls, user_id: str) -> int:
+    async def revoke_user_token(cls, user_id: int) -> int:
         access_token = await cls.get_access_token(user_id)
         client = _get_http_client()
         response = await client.post(
@@ -76,7 +76,7 @@ class API:
         return response.status_code
 
     @classmethod
-    async def get_user_info(cls, user_id: str) -> Users:
+    async def get_user_info(cls, user_id: int) -> Users:
         access_token = await cls.get_access_token(user_id)
         client = _get_http_client()
         response = await client.get(
@@ -88,7 +88,7 @@ class API:
 
     @classmethod
     async def get_user_stats(
-        cls, user_id: str, scope: TimeScope = "last_7_days"
+        cls, user_id: int, scope: TimeScope = "last_7_days"
     ) -> Stats:
         access_token = await cls.get_access_token(user_id)
         client = _get_http_client()
@@ -100,7 +100,7 @@ class API:
         return Stats(**(response.json()["data"]))
 
     @classmethod
-    async def get_user_stats_bar(cls, user_id: str) -> StatsBar | None:
+    async def get_user_stats_bar(cls, user_id: int) -> StatsBar | None:
         access_token = await cls.get_access_token(user_id)
         client = _get_http_client()
         response = await client.get(
@@ -114,7 +114,7 @@ class API:
         return StatsBar(**data)
 
     @classmethod
-    async def get_all_time_since_today(cls, user_id: str) -> str:
+    async def get_all_time_since_today(cls, user_id: int) -> str:
         access_token = await cls.get_access_token(user_id)
         client = _get_http_client()
         response = await client.get(

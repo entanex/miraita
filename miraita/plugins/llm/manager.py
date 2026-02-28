@@ -4,9 +4,9 @@ from typing import Any, overload
 from uuid import uuid4
 
 import litellm
-from arclet.entari import Session, User
 from arclet.letoderea import ExitState
 from arclet.letoderea.typing import Contexts, generate_contexts
+from entari_plugin_user import User, UserSession
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select
 
@@ -33,7 +33,7 @@ class LLMSessionManager:
             return "新对话"
 
     @classmethod
-    async def _get_active_session(cls, user_id: str) -> LLMSession | None:
+    async def _get_active_session(cls, user_id: int) -> LLMSession | None:
         async with get_db_session() as db_session:
             stmt = (
                 select(LLMSession)
@@ -46,19 +46,19 @@ class LLMSessionManager:
     @overload
     @classmethod
     async def _create_session(
-        cls, user_id: str, *, topic: str, model: str | None = None
+        cls, user_id: int, *, topic: str, model: str | None = None
     ) -> LLMSession: ...
 
     @overload
     @classmethod
     async def _create_session(
-        cls, user_id: str, *, user_input: str, model: str | None = None
+        cls, user_id: int, *, user_input: str, model: str | None = None
     ) -> LLMSession: ...
 
     @classmethod
     async def _create_session(
         cls,
-        user_id: str,
+        user_id: int,
         user_input: str | None = None,
         topic: str | None = None,
         model: str | None = None,
@@ -81,11 +81,11 @@ class LLMSessionManager:
         return user_session
 
     @classmethod
-    async def _load_messages(cls, user_id: str) -> list[Message]:
+    async def _load_messages(cls, session_id: str) -> list[Message]:
         async with get_db_session() as db_session:
             stmt = (
                 select(SessionContext)
-                .where(SessionContext.session_id == user_id)
+                .where(SessionContext.session_id == session_id)
                 .order_by(SessionContext.id.asc())
             )
             contexts = list((await db_session.scalars(stmt)).all())
@@ -214,14 +214,14 @@ class LLMSessionManager:
         cls,
         user_input: str,
         ctx: Contexts,
-        session: Session,
+        session: UserSession,
         model: str | None = None,
         new: bool = False,
     ) -> str:
-        llm_session = await cls._get_active_session(session.user.id)
+        llm_session = await cls._get_active_session(session.user_id)
         if new or llm_session is None:
             llm_session = await cls._create_session(
-                user_id=session.user.id, user_input=user_input, model=model
+                user_id=session.user_id, user_input=user_input, model=model
             )
 
         if llm_session.topic == "新对话":

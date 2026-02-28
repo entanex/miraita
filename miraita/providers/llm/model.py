@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Literal, TypeAlias, cast
 
 from entari_plugin_database import Base
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ._types import Message
@@ -15,7 +15,7 @@ class LLMSession(Base):
     __tablename__ = "llm_session"
 
     session_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    user_id: Mapped[str] = mapped_column(String(64), index=True)
+    user_id: Mapped[int] = mapped_column(Integer, index=True)
     topic: Mapped[str] = mapped_column(String(24))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
 

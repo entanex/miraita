@@ -19,7 +19,7 @@ from .render import render_bind_result
 
 @dataclass
 class WaitingRecord:
-    user_id: str
+    user_id: int
     expired_at: datetime
 
 
@@ -35,7 +35,7 @@ def is_mountable() -> bool:
     return True
 
 
-def create_state(user_id: str) -> str:
+def create_state(user_id: int) -> str:
     state = token_hex(20)
     waiting_codes[state] = WaitingRecord(
         user_id=user_id, expired_at=datetime.now() + timedelta(minutes=5)

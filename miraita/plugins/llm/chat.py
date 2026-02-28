@@ -1,11 +1,12 @@
 from collections import deque
 
-from arclet.entari import MessageCreatedEvent, Session, filter_
+from arclet.entari import MessageCreatedEvent, filter_
 from arclet.entari.config import config_model_validate
 from arclet.entari.event.config import ConfigReload
 from arclet.entari.event.send import SendResponse
 from arclet.letoderea import BLOCK, on
 from arclet.letoderea.typing import Contexts
+from entari_plugin_user import UserSession
 
 from miraita.providers.llm.config import Config, _conf
 
@@ -21,11 +22,11 @@ async def _record(event: SendResponse):
 
 
 @on(MessageCreatedEvent, priority=1000).if_(filter_.to_me)
-async def run_conversation(session: Session, ctx: Contexts):
+async def run_conversation(session: UserSession, ctx: Contexts):
     if session.event.sn in RECORD:
         return BLOCK
 
-    msg = session.elements.extract_plain_text()
+    msg = session.internal.elements.extract_plain_text()
     answer = await LLMSessionManager.chat(user_input=msg, ctx=ctx, session=session)
     await session.send(answer)
     return BLOCK

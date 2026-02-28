@@ -1,7 +1,8 @@
 import random
 
 from arclet.alconna import Alconna, CommandMeta
-from arclet.entari import metadata, command, scheduler, Session, At, Image, MessageChain
+from arclet.entari import metadata, command, scheduler, At, Image, MessageChain
+from entari_plugin_user import UserSession
 
 from .config import Config, config
 from .data_source import clear_waifu_data, get_waifu_data, save_waifu_data
@@ -26,16 +27,16 @@ waifu_disp = command.mount(waifu_alc)
 
 
 @waifu_disp.handle()
-async def _(session: Session):
-    if not session.event.guild:
+async def _(session: UserSession):
+    if not session.internal.event.guild:
         await session.send("娶群友只允许在群聊中使用")
         return
 
-    if await get_waifu_data(session.user.id):
+    if await get_waifu_data(str(session.user_id)):
         await session.send("已经有老婆了，不能花心")
         return
 
-    members = (await session.guild_member_list()).data
+    members = (await session.internal.guild_member_list()).data
 
     member = random.choice(members)
 
@@ -57,7 +58,7 @@ async def _(session: Session):
         ]
     )
 
-    await save_waifu_data(session.user.id, member.user.id)
+    await save_waifu_data(str(session.user_id), member.user.id)
 
     await session.send(msg)
 

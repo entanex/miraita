@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from arclet.entari import Session
+from entari_plugin_user import UserSession
 
 from .manager import LLMSessionManager
 from miraita.providers.llm._jsondata import get_default_model
@@ -41,14 +41,14 @@ def render_model_list() -> str:
     return "\n".join(lines)
 
 
-async def select_session(session: Session) -> str | None:
+async def select_session(session: UserSession) -> str | None:
     rows = await LLMSessionManager.list_sessions(session.user)
     if not rows:
         await session.send("暂无会话")
         return None
 
     prompt_text = f"{render_session_list(rows)}\n请输入会话序号或ID："
-    resp = await session.prompt(prompt_text)
+    resp = await session.internal.prompt(prompt_text)
     if resp is None:
         await session.send("等待超时")
         return None

@@ -4,7 +4,10 @@ from arclet.letoderea import BLOCK
 from arclet.alconna import Alconna, Args, CommandMeta, Subcommand
 from arclet.entari import At, ChannelType, Image, Session, command, metadata
 from entari_plugin_database import AsyncSession
+from entari_plugin_user import UserSession, get_user
 from httpx import ConnectError, ConnectTimeout, ReadTimeout
+
+from miraita.providers.argot import Argot, on_argot
 
 from .apis import API
 from .log import logger
@@ -41,15 +44,19 @@ wakatime_disp = command.mount(wakatime_alc)
 
 
 @wakatime_disp.handle(priority=20)
-async def _(session: Session, target: command.Match[At | int]):
+async def _(session: UserSession, target: command.Match[At | int]):
     target_name = "你"
-    target_id = session.user.id
+    target_id = session.user_id
     if target.available:
-        target_name = "他"
         if isinstance(target.result, At) and target.result.id:
-            target_id = target.result.id
+            pid = target.result.id
         else:
-            target_id = str(target.result)
+            pid = str(target.result)
+
+        platform_user = await session.internal.user_get(pid)
+        target_user = await get_user(session.platform, platform_user)
+        target_id = target_user.id
+        target_name = target_user.name
 
     try:
         (
@@ -91,21 +98,26 @@ async def _(session: Session, target: command.Match[At | int]):
     if isinstance(data, str):
         await session.send(data)
     else:
-        await session.send([Image.of(raw=data, mime="image/png")])
+        await session.send(
+            [
+                Image.of(raw=data, mime="image/png"),
+                Argot("wakatime", data={"background": background_image}),
+            ]
+        )
     return BLOCK
 
 
 @wakatime_disp.assign("bind")
 async def _(
     code: command.Match[str],
-    session: Session,
+    session: UserSession,
     db_session: AsyncSession,
 ):
-    if session.channel.type != ChannelType.DIRECT:
+    if session.channel_type != ChannelType.DIRECT:
         await session.send("绑定指令只允许在私聊中使用")
         return BLOCK
 
-    bound = await db_session.get(User, session.user.id)
+    bound = await db_session.get(User, session.user_id)
     if bound is not None:
         await session.send("已绑定过 WakaTime 账号")
         return BLOCK
@@ -136,14 +148,14 @@ async def _(
 
 
 @wakatime_disp.assign("revoke")
-async def _(session: Session, db_session: AsyncSession):
-    user = await db_session.get(User, session.user.id)
+async def _(session: UserSession, db_session: AsyncSession):
+    user = await db_session.get(User, session.user_id)
     if user is None:
         await session.send("你还没有绑定 WakaTime 账号")
         return BLOCK
 
     try:
-        status_code = await API.revoke_user_token(session.user.id)
+        status_code = await API.revoke_user_token(session.user_id)
         if status_code != 200:
             logger.error(f"用户 {session.user.id} 解绑失败。状态码：{status_code}")
             await session.send("解绑失败")
@@ -158,3 +170,12 @@ async def _(session: Session, db_session: AsyncSession):
         logger.exception(f"用户 {session.user.id} 解绑失败")
         await session.send("解绑失败")
     return BLOCK
+
+
+@on_argot("background")
+async def _(session: Session, argot: Argot):
+    if background := argot.data.get("background"):
+        if isinstance(background, str):
+            await session.send([Image.of(url=background)])
+        else:
+            await session.send([Image.of(path=background)])

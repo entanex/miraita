@@ -1,6 +1,7 @@
 from arclet.alconna import Alconna, Args, MultiVar, Option, Subcommand, store_true
-from arclet.entari import Reply, Session, command, metadata
+from arclet.entari import Reply, command, metadata
 from arclet.letoderea import BLOCK, Contexts
+from entari_plugin_user import UserSession
 
 from miraita.providers.llm._jsondata import set_default_model
 from miraita.providers.llm.exception import ModelNotFoundError
@@ -55,7 +56,7 @@ llm_disp = command.mount(llm_alc)
 @llm_disp.handle(priority=25)
 async def _(
     ctx: Contexts,
-    session: Session,
+    session: UserSession,
     content: command.Match[tuple[str, ...]],
     new_opt: command.Query[bool] = command.Query("new_opt.value"),
     model: command.Query[str] = command.Query("model.model"),
@@ -68,7 +69,7 @@ async def _(
         user_input = f"{user_input} {reply.origin.content}".strip()
 
     if not user_input:
-        resp = await session.prompt("需要我为你做些什么？")
+        resp = await session.internal.prompt("需要我为你做些什么？")
         if not resp:
             return BLOCK
         user_input = resp.extract_plain_text()
@@ -91,14 +92,14 @@ async def _(
 
 
 @llm_disp.assign("new_cmd")
-async def _(session: Session):
+async def _(session: UserSession):
     new_session = await LLMSessionManager.create_new_session(session.user)
     await session.send(f"以创建并切换到新会话\n会话ID: {new_session.session_id}")
     return BLOCK
 
 
 @llm_disp.assign("switch")
-async def _(session: Session, session_id: command.Match[str]):
+async def _(session: UserSession, session_id: command.Match[str]):
     if not session_id.available:
         selected = await select_session(session)
         if selected is None:
@@ -112,7 +113,7 @@ async def _(session: Session, session_id: command.Match[str]):
 
 
 @llm_disp.assign("delete")
-async def _(session: Session, session_id: command.Match[str]):
+async def _(session: UserSession, session_id: command.Match[str]):
     if not session_id.available:
         selected = await select_session(session)
         if selected is None:
@@ -130,7 +131,7 @@ async def _(session: Session, session_id: command.Match[str]):
 
 
 @llm_disp.assign("session", priority=20)
-async def _(session: Session):
+async def _(session: UserSession):
     info = await LLMSessionManager.get_current_session_info(session.user)
     if info is None:
         await session.send("当前没有活动会话")
@@ -152,7 +153,7 @@ async def _(session: Session):
 
 
 @llm_disp.assign("session.list")
-async def _(session: Session):
+async def _(session: UserSession):
     rows = await LLMSessionManager.list_sessions(session.user)
 
     if not rows:
@@ -164,7 +165,7 @@ async def _(session: Session):
 
 
 @llm_disp.assign("model", priority=20)
-async def _(session: Session, model: command.Match[str]):
+async def _(session: UserSession, model: command.Match[str]):
     if model.available:
         if model.result not in get_model_list():
             await session.send(render_model_list())
@@ -182,6 +183,6 @@ async def _(session: Session, model: command.Match[str]):
 
 
 @llm_disp.assign("model.list")
-async def _(session: Session):
+async def _(session: UserSession):
     await session.send(render_model_list())
     return BLOCK
