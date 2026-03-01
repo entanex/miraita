@@ -10,7 +10,7 @@ wheels/
 .venv
 
 # miraita
-.env
+.env.*
 .miraita/
 miraita.db
 

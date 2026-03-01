@@ -22,9 +22,12 @@ plugins:
   .localdata:
     app_name: miraita
 
+  ::help: {}
+
   ::auto_reload:
     watch_dirs: [.]
     watch_config: true
+    $disable: env.ENVIRONMENT == "prod"
 
   browser:
     browser_type: firefox

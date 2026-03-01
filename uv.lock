@@ -229,7 +229,7 @@ wheels = [
 
 [[package]]
 name = "arclet-entari"
-version = "0.17.0rc5"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arclet-alconna" },
@@ -240,9 +240,9 @@ dependencies = [
     { name = "satori-python-core" },
     { name = "simpleeval" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/53/73e5adb19174f6880fd402ddbd33f54ff3db7e4bc8143b88464e5fe14c03/arclet_entari-0.17.0rc5.tar.gz", hash = "sha256:7c6b2d76e95a2233e8f8875e41493d7d0879e86b9ff73591d35491c0b848522b", size = 79461, upload-time = "2026-02-27T08:23:43.223Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/e3/c4f0d5af843d93308305d099d684227bcfb41b132738f712371b0faa4e51/arclet_entari-0.17.0.tar.gz", hash = "sha256:0f66c1e250a48b171df69228f67ff4c5cec87117e1761eb72cf1a2b4594e74bb", size = 81738, upload-time = "2026-03-01T13:00:26.896Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/2e/5beb44579a58ab46a20fe475c8a5489e47ee8958a7e74aece7053d1b6d86/arclet_entari-0.17.0rc5-py3-none-any.whl", hash = "sha256:cf929fca30b21d37b24b6c735e19be6384719ea6c01934fe24a91b178747a270", size = 98570, upload-time = "2026-02-27T08:23:41.948Z" },
+    { url = "https://files.pythonhosted.org/packages/27/4a/54335bca962af69022bb8ca974f3b052bbe267355130961cc8037f960c58/arclet_entari-0.17.0-py3-none-any.whl", hash = "sha256:164b2679c1e5921a5da41686437a8512de3791beb3e68a71609c06ab0fa257d4", size = 101801, upload-time = "2026-03-01T13:00:25.341Z" },
 ]
 
 [package.optional-dependencies]
@@ -750,7 +750,7 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.134.0"
+version = "0.135.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
@@ -759,9 +759,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/96/15/647ea81cb73b55b48fb095158a9cd64e42e9e4f1d34dbb5cc4a4939779d6/fastapi-0.134.0.tar.gz", hash = "sha256:3122b1ea0dbeaab48b5976e80b99ca7eda02be154bf03e126a33220e73255a9a", size = 385667, upload-time = "2026-02-27T21:18:12.931Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/7b/f8e0211e9380f7195ba3f3d40c292594fd81ba8ec4629e3854c353aaca45/fastapi-0.135.1.tar.gz", hash = "sha256:d04115b508d936d254cea545b7312ecaa58a7b3a0f84952535b4c9afae7668cd", size = 394962, upload-time = "2026-03-01T18:18:29.369Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/e6/fd49c28a54b7d6f5c64045155e40f6cff9ed4920055043fb5ac7969f7f2f/fastapi-0.134.0-py3-none-any.whl", hash = "sha256:f4e7214f24b2262258492e05c48cf21125e4ffc427e30dd32fb4f74049a3d56a", size = 110404, upload-time = "2026-02-27T21:18:10.809Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/72/42e900510195b23a56bde950d26a51f8b723846bfcaa0286e90287f0422b/fastapi-0.135.1-py3-none-any.whl", hash = "sha256:46e2fc5745924b7c840f71ddd277382af29ce1cdb7d5eab5bf697e3fb9999c9e", size = 116999, upload-time = "2026-03-01T18:18:30.831Z" },
 ]
 
 [[package]]
@@ -829,11 +829,11 @@ wheels = [
 
 [[package]]
 name = "filelock"
-version = "3.24.3"
+version = "3.25.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/73/92/a8e2479937ff39185d20dd6a851c1a63e55849e447a55e798cc2e1f49c65/filelock-3.24.3.tar.gz", hash = "sha256:011a5644dc937c22699943ebbfc46e969cdde3e171470a6e40b9533e5a72affa", size = 37935, upload-time = "2026-02-19T00:48:20.543Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/18/a1fd2231c679dcb9726204645721b12498aeac28e1ad0601038f94b42556/filelock-3.25.0.tar.gz", hash = "sha256:8f00faf3abf9dc730a1ffe9c354ae5c04e079ab7d3a683b7c32da5dd05f26af3", size = 40158, upload-time = "2026-03-01T15:08:45.916Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9c/0f/5d0c71a1aefeb08efff26272149e07ab922b64f46c63363756224bd6872e/filelock-3.24.3-py3-none-any.whl", hash = "sha256:426e9a4660391f7f8a810d71b0555bce9008b0a1cc342ab1f6947d37639e002d", size = 24331, upload-time = "2026-02-19T00:48:18.465Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/0b/de6f54d4a8bedfe8645c41497f3c18d749f0bd3218170c667bf4b81d0cdd/filelock-3.25.0-py3-none-any.whl", hash = "sha256:5ccf8069f7948f494968fc0713c10e5c182a9c9d9eef3a636307a20c2490f047", size = 26427, upload-time = "2026-03-01T15:08:44.593Z" },
 ]
 
 [[package]]
@@ -1360,19 +1360,19 @@ wheels = [
 
 [[package]]
 name = "linkify-it-py"
-version = "2.0.3"
+version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "uc-micro-py" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2a/ae/bb56c6828e4797ba5a4821eec7c43b8bf40f69cda4d4f5f8c8a2810ec96a/linkify-it-py-2.0.3.tar.gz", hash = "sha256:68cda27e162e9215c17d786649d1da0021a451bdc436ef9e0fa0ba5234b9b048", size = 27946, upload-time = "2024-02-04T14:48:04.179Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/c9/06ea13676ef354f0af6169587ae292d3e2406e212876a413bf9eece4eb23/linkify_it_py-2.1.0.tar.gz", hash = "sha256:43360231720999c10e9328dc3691160e27a718e280673d444c38d7d3aaa3b98b", size = 29158, upload-time = "2026-03-01T07:48:47.683Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/1e/b832de447dee8b582cac175871d2f6c3d5077cc56d5575cadba1fd1cccfa/linkify_it_py-2.0.3-py3-none-any.whl", hash = "sha256:6bcbc417b0ac14323382aef5c5192c0075bf8a9d6b41820a2b66371eac6b6d79", size = 19820, upload-time = "2024-02-04T14:48:02.496Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/de/88b3be5c31b22333b3ca2f6ff1de4e863d8fe45aaea7485f591970ec1d3e/linkify_it_py-2.1.0-py3-none-any.whl", hash = "sha256:0d252c1594ecba2ecedc444053db5d3a9b7ec1b0dd929c8f1d74dce89f86c05e", size = 19878, upload-time = "2026-03-01T07:48:46.098Z" },
 ]
 
 [[package]]
 name = "litellm"
-version = "1.81.16"
+version = "1.82.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1388,9 +1388,9 @@ dependencies = [
     { name = "tiktoken" },
     { name = "tokenizers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/36/3cbb22d6ef88c10f3fa4f04664c2a37e93a2e6f9c51899cd9fd025cb0a50/litellm-1.81.16.tar.gz", hash = "sha256:264a3868942e722cd6c19c2d625524fe624a1b6961c37c22d299dc7ea99823b3", size = 16668405, upload-time = "2026-02-26T13:01:48.429Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/00/49bb5c28e0dea0f5086229a2a08d5fdc6c8dc0d8e2acb2a2d1f7dd9f4b70/litellm-1.82.0.tar.gz", hash = "sha256:d388f52447daccbcaafa19a3e68d17b75f1374b5bf2cde680d65e1cd86e50d22", size = 16800355, upload-time = "2026-03-01T02:35:30.363Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/1e/0022cde913bac87a493e4a182b8768f75e7ae90b64d4e11acb009b18311f/litellm-1.81.16-py3-none-any.whl", hash = "sha256:d6bcc13acbd26719e07bfa6b9923740e88409cbf1f9d626d85fc9ae0e0eec88c", size = 14774277, upload-time = "2026-02-26T13:01:45.652Z" },
+    { url = "https://files.pythonhosted.org/packages/28/89/eb28bfcf97d6b045c400e72eb047c381594467048c237dbb6c227764084c/litellm-1.82.0-py3-none-any.whl", hash = "sha256:5496b5d4532cccdc7a095c21cbac4042f7662021c57bc1d17be4e39838929e80", size = 14911978, upload-time = "2026-03-01T02:35:26.844Z" },
 ]
 
 [[package]]
@@ -1686,7 +1686,7 @@ prometheus = [
 
 [package.metadata]
 requires-dist = [
-    { name = "arclet-entari", extras = ["full", "pydantic"], specifier = ">=0.17.0rc5" },
+    { name = "arclet-entari", extras = ["full", "pydantic"], specifier = ">=0.17.0" },
     { name = "entari-plugin-browser", specifier = ">=0.5.2" },
     { name = "entari-plugin-database", specifier = ">=0.2.1" },
     { name = "entari-plugin-server", specifier = ">=0.2.3" },
@@ -2404,11 +2404,11 @@ wheels = [
 
 [[package]]
 name = "python-dotenv"
-version = "1.2.1"
+version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f0/26/19cadc79a718c5edbec86fd4919a6b6d3f681039a2f6d66d14be94e75fb9/python_dotenv-1.2.1.tar.gz", hash = "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6", size = 44221, upload-time = "2025-10-26T15:12:10.434Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/1b/a298b06749107c305e1fe0f814c6c74aea7b2f1e10989cb30f544a1b3253/python_dotenv-1.2.1-py3-none-any.whl", hash = "sha256:b81ee9561e9ca4004139c6cbba3a238c32b03e4894671e181b671e8cb8425d61", size = 21230, upload-time = "2025-10-26T15:12:09.109Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
 ]
 
 [[package]]
@@ -2814,7 +2814,7 @@ wheels = [
 
 [[package]]
 name = "satori-python"
-version = "0.18.1"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2828,9 +2828,9 @@ dependencies = [
     { name = "websockets" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d9/99/f07e0456f69e4b9c7fe012d4361ea8792e0a65c550577dda9e6ee93ecc2d/satori_python-0.18.1.tar.gz", hash = "sha256:80561aef3b9995f919a96584925b4359d3529c6b3780ce5d69721d5bb871b48b", size = 45497, upload-time = "2026-02-14T02:17:09.971Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/ef/5e0587cf29d85d5a42f6cb5ca863b159650bb5978d8345002eb99d49d6f0/satori_python-1.3.0.tar.gz", hash = "sha256:bebc076ec216e94827bca840317df83a131b1af9f5c4b513aed23fc532f06eac", size = 46017, upload-time = "2026-02-28T03:37:10.079Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/10/8471a455a6252458180cc14bfdf36ca0f90dfbebb0b8711e3eeed82b9827/satori_python-0.18.1-py3-none-any.whl", hash = "sha256:de697c44280e9c31d3dc2d7e21323021bc8a2b4a9573197ca8499fc80d228ddb", size = 52712, upload-time = "2026-02-14T02:17:08.431Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/6e/486d54e2e91472ad791fb393b70b26987fd045fdc5d6c00220a0ed567acb/satori_python-1.3.0-py3-none-any.whl", hash = "sha256:5372d487c87b909e83479494c2a377b0e3b090a97acf31c12b3c7b3a5a4eaf1c", size = 53273, upload-time = "2026-02-28T03:37:09.022Z" },
 ]
 
 [[package]]
@@ -2859,19 +2859,19 @@ wheels = [
 
 [[package]]
 name = "satori-python-adapter-satori"
-version = "0.3.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "satori-python" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/83/7816886038d4711953703b4515d3ce00ec8165616a2c03d158f7fba16277/satori_python_adapter_satori-0.3.0.tar.gz", hash = "sha256:960114694569760f20628e65b29ba2fadab10c9d38e1658594d1b4c275f2a501", size = 5017, upload-time = "2026-02-02T04:21:36.788Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/d5/981f9128ac6a69890db3d254fccb072b15e8dea7ae9bdc49a2ce331a7b05/satori_python_adapter_satori-0.4.0.tar.gz", hash = "sha256:9a87a35c864eefb53c98c6f5f8f9d97bad3142e069dc856d28df05d01a755b85", size = 5039, upload-time = "2026-02-28T03:49:58.291Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/ec/ec1f48911b1d54616c210dc76f29c99768ffbb79a9ffd8f8daf82deedf40/satori_python_adapter_satori-0.3.0-py3-none-any.whl", hash = "sha256:d7a903de062c8ab84a522904a6d0fff130b13cbd0ba065c9d32d09a498dd63a3", size = 5810, upload-time = "2026-02-02T04:21:35.956Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/80/fc15dc0ee40af2bd208661939d19016a2c71506cf8527f60a3e819a5216f/satori_python_adapter_satori-0.4.0-py3-none-any.whl", hash = "sha256:6c9b8866f82c4d863158478ef125065704ed326abd0799cea043a4c6b184d83d", size = 5828, upload-time = "2026-02-28T03:49:57.252Z" },
 ]
 
 [[package]]
 name = "satori-python-client"
-version = "0.18.1"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2879,23 +2879,23 @@ dependencies = [
     { name = "launart" },
     { name = "satori-python-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9f/af/93eaf2c9d3101a1b132f3daa9b0218e8a21d4040565cb6554e96eb6f9bbc/satori_python_client-0.18.1.tar.gz", hash = "sha256:372f7c07c637be835b8451e6dbe778934ec6ae326e92d408aaf273502727f29a", size = 20501, upload-time = "2026-02-14T02:18:01.505Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/56/9c/e9ae2699dc74bc95ca9cd45516181628869a442fc9bfa44cc0374b466fb1/satori_python_client-1.3.0.tar.gz", hash = "sha256:ab5083aa3831bb51c37912690aa1345d40929fe31d20417c9ab76a61c8ccd273", size = 20705, upload-time = "2026-02-28T03:48:06.093Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c9/73/59c79221ec2b035a00efa638e7d71e7df5619dc30fc1277356ac4f8af62e/satori_python_client-0.18.1-py3-none-any.whl", hash = "sha256:f256dee2edf10dd806a884bbc2808ae8284824ac84ef4e67ed29f2b6ba57ad59", size = 23681, upload-time = "2026-02-14T02:18:00.669Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/30/ee591b879d1de7a2ebd11ab410715132fadc8e609e0a5964f334a9acad13/satori_python_client-1.3.0-py3-none-any.whl", hash = "sha256:dac5d20673235de528d71edf26f6fc5aa37a55b31f3c7ebe6c59a8d2b0948dfc", size = 23911, upload-time = "2026-02-28T03:48:04.994Z" },
 ]
 
 [[package]]
 name = "satori-python-core"
-version = "0.18.1"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "loguru" },
     { name = "typing-extensions" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/79/78/5ede9faf3a0ffa68c67746e578dace159df2959a0c58d130c79bfd53d466/satori_python_core-0.18.1.tar.gz", hash = "sha256:be6966fbb4f32e08522c2cfdff8d5537c0217e288b0e414ab9d8b8dd8f17f55f", size = 21355, upload-time = "2026-02-14T02:17:50.743Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/93/d5f7494ef170125eb6de2d81bc95fa41a05e5f275f88a712767353586e78/satori_python_core-1.3.0.tar.gz", hash = "sha256:d4a3bd3f6b01b4cf2eb25677f8868fc3103a9365972999b885e338bf160a74dd", size = 21696, upload-time = "2026-02-28T03:48:02.019Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/7f/4b4f52a9378238f96ebc300ab836918a05b2407e1a7f08c7dfdadf5badb7/satori_python_core-0.18.1-py3-none-any.whl", hash = "sha256:fa735dce5149d59d9124f888a4646828ea027ae61cb4c987b2170bab7b85f9cc", size = 22225, upload-time = "2026-02-14T02:17:49.596Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/12/7a3e01888ab2d2a9b927f56237a76ff24fd4abccd4525b42b22f077883bd/satori_python_core-1.3.0-py3-none-any.whl", hash = "sha256:e2dcc4547b9ace97002061bbcb2373b590929cba42f6897da91f587e6bd620b2", size = 22565, upload-time = "2026-02-28T03:48:00.946Z" },
 ]
 
 [[package]]
@@ -3340,11 +3340,11 @@ wheels = [
 
 [[package]]
 name = "uc-micro-py"
-version = "1.0.3"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/91/7a/146a99696aee0609e3712f2b44c6274566bc368dfe8375191278045186b8/uc-micro-py-1.0.3.tar.gz", hash = "sha256:d321b92cff673ec58027c04015fcaa8bb1e005478643ff4a500882eaab88c48a", size = 6043, upload-time = "2024-02-09T16:52:01.654Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/78/67/9a363818028526e2d4579334460df777115bdec1bb77c08f9db88f6389f2/uc_micro_py-2.0.0.tar.gz", hash = "sha256:c53691e495c8db60e16ffc4861a35469b0ba0821fe409a8a7a0a71864d33a811", size = 6611, upload-time = "2026-03-01T06:31:27.526Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/87/1f677586e8ac487e29672e4b17455758fce261de06a0d086167bb760361a/uc_micro_py-1.0.3-py3-none-any.whl", hash = "sha256:db1dffff340817673d7b466ec86114a9dc0e9d4d9b5ba229d9d60e5c12600cd5", size = 6229, upload-time = "2024-02-09T16:52:00.371Z" },
+    { url = "https://files.pythonhosted.org/packages/61/73/d21edf5b204d1467e06500080a50f79d49ef2b997c79123a536d4a17d97c/uc_micro_py-2.0.0-py3-none-any.whl", hash = "sha256:3603a3859af53e5a39bc7677713c78ea6589ff188d70f4fee165db88e22b242c", size = 6383, upload-time = "2026-03-01T06:31:26.257Z" },
 ]
 
 [[package]]
