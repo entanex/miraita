@@ -1,0 +1,32 @@
+services:
+  miraita:
+    image: miraita:latest
+    container_name: miraita
+    restart: always
+    ports:
+      - "2310:2310"
+    volumes:
+      - "./entari.yml:/app/entari.yml"
+      - "./.miraita:/app/.miraita"
+    env_file:
+      - ".env"
+    networks:
+      - bot-network
+
+  llonebot:
+    image: initialencounter/llonebot:latest
+    container_name: llonebot
+    restart: always
+    ports:
+      - "3010:3010"  # Milky
+      - "5600:5600"  # Satori
+      - "3080:3080"  # WebUI
+    volumes:
+      - "./QQ:/root/.config/QQ"
+      - "./llonebot:/root/llonebot"
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge

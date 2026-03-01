@@ -13,3 +13,6 @@ wheels/
 .env
 .miraita/
 miraita.db
+
+llonebot/
+QQ/

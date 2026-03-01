@@ -20,9 +20,7 @@ dependencies = [
 dev = [
     "pre-commit>=4.2.0",
     "ruff>=0.12.7",
-    "email-validator>=2.2.0",
-    "satori-python-adapter-onebot11>=0.1.0",
-    "satori-python-adapter-satori>=0.1.0",
+    "email-validator>=2.2.0", 
     "rich>=14.1.0",
 ]
 llm = [
@@ -31,6 +29,11 @@ llm = [
 ]
 prometheus = [
     "prometheus-client>=0.22.1",
+]
+adapters = [
+    "satori-python-adapter-milky>=0.2.0",
+    "satori-python-adapter-onebot11>=0.1.0",
+    "satori-python-adapter-satori>=0.1.0",
 ]
 
 [tool.uv.build-backend]

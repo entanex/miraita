@@ -1,14 +1,8 @@
 basic:
-  network:
-    - type: ws
-      host: localhost
-      port: 5140
-      path: satori
-
   prefix: ["/"]
   ignore_self_message: true
   log:
-    level: debug
+    level: info
     ignores: ["aiosqlite.core", "httpcore._trace"]
     save: false
     rich_error: false
@@ -33,8 +27,8 @@ plugins:
     watch_config: true
 
   browser:
-    browser_type: chromium
-    channel: chrome
+    browser_type: firefox
+    channel: firefox
     headless: true
 
   database:
@@ -45,15 +39,19 @@ plugins:
   server:
     host: 0.0.0.0
     port: 2310
-    token: miraita1234
+    token: miraita2310
+    adapters:
+      - $path: "@milky.main"
+        endpoint: "http://localhost:3010"
+        token: ${{ env.MILKY_TOKEN }}
 
   miraita: {}
 
   ?miraita.plugins.wakatime:
-    client_id: ${{ env.CLIENT_ID }}
-    client_secret: ${{ env.CLIENT_SECRET }}
+    client_id: ${{ env.WAKA_CLIENT_ID }}
+    client_secret: ${{ env.WAKA_CLIENT_SECRET }}
     register_route: /register
-    redirect_uri: ${{ env.REDIRECT_URI }}
+    redirect_uri: ${{ env.WAKA_REDIRECT_URI }}
     background_source: Lolicon
 
   ?miraita.providers.llm:

@@ -1665,13 +1665,16 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+adapters = [
+    { name = "satori-python-adapter-milky" },
+    { name = "satori-python-adapter-onebot11" },
+    { name = "satori-python-adapter-satori" },
+]
 dev = [
     { name = "email-validator" },
     { name = "pre-commit" },
     { name = "rich" },
     { name = "ruff" },
-    { name = "satori-python-adapter-onebot11" },
-    { name = "satori-python-adapter-satori" },
 ]
 llm = [
     { name = "docstring-parser" },
@@ -1695,13 +1698,16 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+adapters = [
+    { name = "satori-python-adapter-milky", specifier = ">=0.2.0" },
+    { name = "satori-python-adapter-onebot11", specifier = ">=0.1.0" },
+    { name = "satori-python-adapter-satori", specifier = ">=0.1.0" },
+]
 dev = [
     { name = "email-validator", specifier = ">=2.2.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "rich", specifier = ">=14.1.0" },
     { name = "ruff", specifier = ">=0.12.7" },
-    { name = "satori-python-adapter-onebot11", specifier = ">=0.1.0" },
-    { name = "satori-python-adapter-satori", specifier = ">=0.1.0" },
 ]
 llm = [
     { name = "docstring-parser", specifier = ">=0.17.0" },
@@ -2825,6 +2831,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d9/99/f07e0456f69e4b9c7fe012d4361ea8792e0a65c550577dda9e6ee93ecc2d/satori_python-0.18.1.tar.gz", hash = "sha256:80561aef3b9995f919a96584925b4359d3529c6b3780ce5d69721d5bb871b48b", size = 45497, upload-time = "2026-02-14T02:17:09.971Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/65/10/8471a455a6252458180cc14bfdf36ca0f90dfbebb0b8711e3eeed82b9827/satori_python-0.18.1-py3-none-any.whl", hash = "sha256:de697c44280e9c31d3dc2d7e21323021bc8a2b4a9573197ca8499fc80d228ddb", size = 52712, upload-time = "2026-02-14T02:17:08.431Z" },
+]
+
+[[package]]
+name = "satori-python-adapter-milky"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "satori-python-server" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cd/7a/b56bde8cd1732de86146da1b397ad3ddfbc1f733c37c8c3a375cf3807892/satori_python_adapter_milky-0.2.0.tar.gz", hash = "sha256:e5712c1c285e57f8a9041e1fd5dce8bdd9fc85a88452dd1871d092f6333f3808", size = 17096, upload-time = "2026-02-02T04:22:50.968Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/1d/dc74b2649d17440dd181a121642711047dc7afd3055ebeb1e21320427b02/satori_python_adapter_milky-0.2.0-py3-none-any.whl", hash = "sha256:4015c3b8fee5a9e25d1712d278c951ae58efdfd6302453847f74aa5710b7e228", size = 20160, upload-time = "2026-02-02T04:22:49.627Z" },
 ]
 
 [[package]]
