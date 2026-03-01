@@ -1,6 +1,6 @@
 services:
   miraita:
-    image: miraita:latest
+    image: komoridev/miraita:latest
     container_name: miraita
     restart: always
     ports:
