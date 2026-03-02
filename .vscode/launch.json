@@ -2,7 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "debug",
+        "name": "Debug",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder}/main.py",
+        "console": "integratedTerminal",
+        "justMyCode": false
+    },
+    {
+      "name": "Attach",
       "type": "debugpy",
       "request": "attach",
       "processId": "${command:pickProcess}",
