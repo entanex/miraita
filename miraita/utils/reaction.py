@@ -23,6 +23,9 @@ class ReactionPropagator(Propagator):
         )
 
     async def finish(self, session: Session[MessageCreatedEvent]):
+        if session.channel.type == ChannelType.DIRECT:
+            return
+
         if self.emoji:
             await session.reaction_delete(self.emoji)
 
