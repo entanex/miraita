@@ -26,3 +26,6 @@ class HealthCheckFilter(logging.Filter):
             return False
 
         return True
+
+
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
