@@ -24,8 +24,7 @@ class ReactionPropagator(Propagator):
         self.emoji_ids = emoji_ids
 
     def before(self, session: Session[ReactionAddedEvent]):
-        content = session.event.message.content
-        emoji_id = content.split("|")[1]
+        emoji_id = session.event.emoji.id
         if emoji_id not in self.emoji_ids:
             return STOP
 

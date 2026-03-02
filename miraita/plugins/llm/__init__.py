@@ -1,5 +1,6 @@
 from arclet.alconna import Alconna, Args, MultiVar, Option, Subcommand, store_true
-from arclet.entari import Reply, command, metadata
+from arclet.entari import command, metadata
+from arclet.entari.const import ITEM_MESSAGE_REPLY
 from arclet.letoderea import BLOCK, Contexts
 from entari_plugin_user import UserSession
 
@@ -61,7 +62,7 @@ async def _(
     new_opt: command.Query[bool] = command.Query("new_opt.value"),
     model: command.Query[str] = command.Query("model.model"),
 ):
-    reply: Reply | None = ctx.get("$message_reply")
+    reply = ctx.get(ITEM_MESSAGE_REPLY)
 
     user_input = " ".join(content.result) if content.available else ""
 

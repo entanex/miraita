@@ -6,6 +6,7 @@ from arclet.entari.event.base import (
     GuildMemberAddedEvent,
     GuildMemberRemovedEvent,
     GuildMemberRequestEvent,
+    ReactionAddedEvent,
 )
 from entari_plugin_user import UserSession
 
@@ -75,10 +76,12 @@ async def guild_member_request(session: Session[GuildMemberRequestEvent]):
 @on_argot("approve")
 @on_reaction(["124", "424"])
 async def _(argot: Argot, session: UserSession):
-    if (
-        not check_member_permission(session.internal.member)
-        or session.user.authority <= 3
-    ):
+    if isinstance(session.internal.event, ReactionAddedEvent):
+        member = await session.internal.guild_member_get(session.platform_id)
+    else:
+        member = session.internal.member
+
+    if not check_member_permission(member) or session.user.authority <= 3:
         await session.send("权限不足")
         return
 
@@ -92,10 +95,12 @@ async def _(argot: Argot, session: UserSession):
 @on_argot("refuse [comment:str]")
 @on_reaction(["123"])
 async def _(argot: Argot, session: UserSession, comment: str = ""):
-    if (
-        not check_member_permission(session.internal.member)
-        or session.user.authority <= 3
-    ):
+    if isinstance(session.internal.event, ReactionAddedEvent):
+        member = await session.internal.guild_member_get(session.platform_id)
+    else:
+        member = session.internal.member
+
+    if not check_member_permission(member) or session.user.authority <= 3:
         await session.send("权限不足")
         return
 
