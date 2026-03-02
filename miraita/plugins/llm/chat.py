@@ -8,6 +8,7 @@ from arclet.letoderea import BLOCK, on
 from arclet.letoderea.typing import Contexts
 from entari_plugin_user import UserSession
 
+from miraita.utils.reaction import with_reaction
 from miraita.providers.llm.config import Config, _conf
 
 from .manager import LLMSessionManager
@@ -22,8 +23,9 @@ async def _record(event: SendResponse):
 
 
 @on(MessageCreatedEvent, priority=1000).if_(filter_.notice_me)
+@with_reaction
 async def run_conversation(session: UserSession, ctx: Contexts):
-    if session.event.sn in RECORD:
+    if session.internal.event.sn in RECORD:
         return BLOCK
 
     msg = session.internal.elements.extract_plain_text()

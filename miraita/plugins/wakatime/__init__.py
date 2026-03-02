@@ -8,6 +8,7 @@ from entari_plugin_user import UserSession, get_user
 from httpx import ConnectError, ConnectTimeout, ReadTimeout
 
 from miraita.providers.argot import Argot, on_argot
+from miraita.utils.reaction import with_reaction
 
 from .apis import API
 from .log import logger
@@ -44,6 +45,7 @@ wakatime_disp = command.mount(wakatime_alc)
 
 
 @wakatime_disp.handle(priority=20)
+@with_reaction
 async def _(session: UserSession, target: command.Match[At | int]):
     target_name = "你"
     target_id = session.user_id

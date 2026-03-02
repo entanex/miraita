@@ -4,6 +4,7 @@ from arclet.entari.const import ITEM_MESSAGE_REPLY
 from arclet.letoderea import BLOCK, Contexts
 from entari_plugin_user import UserSession
 
+from miraita.utils.reaction import with_reaction
 from miraita.providers.llm._jsondata import set_default_model
 from miraita.providers.llm.exception import ModelNotFoundError
 from miraita.providers.llm.config import get_model_config, get_model_list
@@ -55,6 +56,7 @@ llm_disp = command.mount(llm_alc)
 
 
 @llm_disp.handle(priority=25)
+@with_reaction
 async def _(
     ctx: Contexts,
     session: UserSession,
