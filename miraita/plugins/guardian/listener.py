@@ -7,10 +7,12 @@ from arclet.entari.event.base import (
     GuildMemberRemovedEvent,
     GuildMemberRequestEvent,
 )
+from entari_plugin_user import UserSession
 
 from miraita.providers.argot import Argot, on_argot, on_reaction
 
 from . import filter
+from .utils import check_member_permission
 
 
 @plugin.listen(GuildMemberAddedEvent)
@@ -72,20 +74,34 @@ async def guild_member_request(session: Session[GuildMemberRequestEvent]):
 
 @on_argot("approve")
 @on_reaction(["124", "424"])
-async def _(argot: Argot, session: Session):
+async def _(argot: Argot, session: UserSession):
+    if (
+        not check_member_permission(session.internal.member)
+        or session.user.authority <= 3
+    ):
+        await session.send("权限不足")
+        return
+
     message_id = argot.data.get("message_id")
     if message_id is None:
         return
 
-    await session.account.guild_member_approve(message_id, True, "")
+    await session.internal.account.guild_member_approve(message_id, True, "")
 
 
 @on_argot("refuse [comment:str]")
 @on_reaction(["123"])
-async def _(argot: Argot, session: Session, comment: str = ""):
+async def _(argot: Argot, session: UserSession, comment: str = ""):
+    if (
+        not check_member_permission(session.internal.member)
+        or session.user.authority <= 3
+    ):
+        await session.send("权限不足")
+        return
+
     message_id = argot.data.get("message_id")
     if message_id is None:
         return
 
     with suppress(JSONDecodeError):
-        await session.account.guild_member_approve(message_id, False, comment)
+        await session.internal.account.guild_member_approve(message_id, False, comment)

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-from satori import EventType
+from satori import EventType, Member
 
 SUPPORTED_EVENTS = (
     EventType.GUILD_MEMBER_ADDED.value,
@@ -31,3 +31,9 @@ def resolve_events(events: Iterable[str]) -> tuple[set[str], set[str]]:
             invalid.add(raw)
 
     return resolved, invalid
+
+
+def check_member_permission(
+    member: Member, permission: list[str] = ["owner", "admin"]
+) -> bool:
+    return bool(set(permission) & {role.id for role in member.roles})

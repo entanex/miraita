@@ -1,5 +1,4 @@
-from contextlib import suppress
-from satori.exception import ActionFailed
+from satori.exception import ActionFailed, ServerException
 from arclet.entari import (
     metadata,
     command,
@@ -10,7 +9,9 @@ from arclet.entari import (
 )
 from arclet.alconna import Args, MultiVar, Option, Alconna, CommandMeta, store_true
 
-from .utils import resolve_events
+from entari_plugin_user import User, UserSession
+
+from .utils import resolve_events, check_member_permission
 from . import listener as listener
 
 from miraita.providers.datastore import datastore
@@ -69,59 +70,87 @@ guard = Alconna(
 
 
 @command.on(mute)
-async def _(session: Session, target: At | int, duration: int = 5):
-    if not session.event.guild:
+async def _(session: UserSession, target: At | int, duration: int = 5):
+    if not session.internal.event.guild:
         await session.send("该操作只允许在群聊中使用")
+        return
+
+    if (
+        not check_member_permission(session.internal.member)
+        or session.user.authority <= 3
+    ):
+        await session.send("权限不足")
         return
 
     if isinstance(target, At) and target.id:
         target_id = target.id
-        target_name = target.name
     elif isinstance(target, int):
         target_id = str(target)
-        target_name = (await session.guild_member_get(target_id)).nick
+        target = At(target_id)
     else:
         await session.send("无效的目标成员")
         return
 
-    with suppress(ActionFailed):
-        await session.guild_member_mute(target_id, duration * 60)
-        await session.send(f"已禁言 {target_name} {duration} 秒")
+    try:
+        await session.internal.guild_member_mute(target_id, duration * 60)
+        await session.send(f"已禁言 {target} {duration} 分钟")
+    except ServerException as e:
+        await session.send(f"禁言失败: {e}")
+    except ActionFailed:
+        ...
 
 
 @command.on(kick)
 async def _(
-    session: Session,
+    session: UserSession,
     target: At | int,
     permanent: command.Query[bool] = command.Query("permanent.value"),
 ):
-    if not session.event.guild:
+    if not session.internal.event.guild:
         await session.send("该操作只允许在群聊中使用")
+        return
+
+    if (
+        not check_member_permission(session.internal.member)
+        or session.user.authority <= 3
+    ):
+        await session.send("权限不足")
         return
 
     if isinstance(target, At) and target.id:
         target_id = target.id
-        target_name = target.name
     elif isinstance(target, int):
         target_id = str(target)
-        target_name = (await session.guild_member_get(target_id)).nick
+        target = At(target_id)
     else:
         await session.send("无效的目标成员")
         return
 
-    with suppress(ActionFailed):
-        await session.guild_member_kick(target_id, permanent.available)
-        await session.send(f"已将 {target_name} 踢出群聊")
+    try:
+        await session.internal.guild_member_kick(target_id, permanent.available)
+        await session.send(f"已将 {target} 踢出群聊")
+    except ServerException as e:
+        await session.send(f"操作失败: {e}")
+    except ActionFailed:
+        ...
 
 
 @command.on(withdraw)
-async def _(session: Session[MessageCreatedEvent]):
+async def _(session: Session[MessageCreatedEvent], user: User):
+    if not check_member_permission(session.member) or user.authority <= 3:
+        await session.send("权限不足")
+        return
+
     if session.event.quote is None or session.event.quote.id is None:
         await session.send("需回复要撤回的消息")
         return
 
-    with suppress(ActionFailed):
+    try:
         await session.account.message_delete(session.channel.id, session.event.quote.id)
+    except ServerException as e:
+        await session.send(f"操作失败: {e}")
+    except ActionFailed:
+        ...
 
 
 @command.on(guard)
