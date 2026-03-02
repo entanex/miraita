@@ -50,6 +50,6 @@ EXPOSE 2310
 
 ENV APP_MODULE=bot:app
 
-HEALTHCHECK --interval=5s --timeout=4s --start-period=180s --retries=5 CMD curl -f http://localhost:${PORT:-2310}/api/v1/health || exit 1
+HEALTHCHECK --interval=5s --timeout=4s --start-period=180s --retries=5 CMD curl -f http://localhost:${PORT:-2310}/api/v1/health/ || exit 1
 
 CMD ["uv", "run", "main.py"]
