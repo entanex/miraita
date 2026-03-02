@@ -21,7 +21,7 @@ async def _record(event: SendResponse):
         RECORD.append(event.session.event.sn)
 
 
-@on(MessageCreatedEvent, priority=1000).if_(filter_.to_me)
+@on(MessageCreatedEvent, priority=1000).if_(filter_.notice_me)
 async def run_conversation(session: UserSession, ctx: Contexts):
     if session.event.sn in RECORD:
         return BLOCK
