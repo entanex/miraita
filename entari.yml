@@ -44,7 +44,7 @@ plugins:
     port: 2310
     token: miraita2310
     adapters:
-      - $path: "@milky.main"
+      - $path: "@milky.main:MilkyWebsocketAdapter"
         endpoint: "http://localhost:3010"
         token: ${{ env.MILKY_TOKEN }}
 

@@ -8,7 +8,7 @@ dependencies = [
     "arclet-entari[full,pydantic]>=0.17.0",
     "entari-plugin-browser>=0.5.2",
     "entari-plugin-database>=0.2.1",
-    "entari-plugin-server>=0.2.3",
+    "entari-plugin-server>=0.6.1",
     "entari-plugin-user>=0.1.3",
     "fastapi>=0.116.1",
     "pillow>=11.3.0",
@@ -25,15 +25,15 @@ dev = [
 ]
 llm = [
     "docstring-parser>=0.17.0",
-    "litellm>=1.81.14",
+    "litellm>=1.82.0",
 ]
 prometheus = [
     "prometheus-client>=0.22.1",
 ]
 adapters = [
-    "satori-python-adapter-milky>=0.2.0",
-    "satori-python-adapter-onebot11>=0.1.0",
-    "satori-python-adapter-satori>=0.1.0",
+    "satori-python-adapter-milky>=0.3.1",
+    "satori-python-adapter-onebot11>=0.4.1",
+    "satori-python-adapter-satori>=0.4.0",
 ]
 
 [tool.uv.build-backend]
