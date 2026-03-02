@@ -1,6 +1,7 @@
 from typing import Literal, TypeAlias
 from urllib.parse import parse_qs
 
+from creart import it
 from launart import Launart
 from sqlalchemy import select
 from entari_plugin_database import get_session as get_db_session
@@ -18,7 +19,7 @@ TimeScope: TypeAlias = Literal[
 
 
 def _get_http_client():
-    return Launart.current().get_component(HttpxClientService).session
+    return it(Launart).get_component(HttpxClientService).session
 
 
 class API:
