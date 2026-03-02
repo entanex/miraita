@@ -1,4 +1,11 @@
 basic:
+  network:
+    - type: ws
+      host: 0.0.0.0
+      port: 2310
+      path: satori
+      token: miraita2310
+
   prefix: ["/"]
   ignore_self_message: true
   log:
@@ -42,6 +49,7 @@ plugins:
   server:
     host: 0.0.0.0
     port: 2310
+    path: satori
     token: miraita2310
     adapters:
       - $path: "@milky.main:MilkyWebsocketAdapter"
