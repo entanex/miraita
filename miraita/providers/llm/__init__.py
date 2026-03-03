@@ -5,7 +5,6 @@ from .events import LLMToolEvent as LLMToolEvent
 from .log import _suppress_litellm_logging
 from . import listener as listener
 
-
 metadata(
     name="LLM Toolkit",
     author=[
