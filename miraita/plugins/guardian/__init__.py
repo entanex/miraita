@@ -7,7 +7,16 @@ from arclet.entari import (
     MessageCreatedEvent,
     ChannelType,
 )
-from arclet.alconna import Args, MultiVar, Option, Alconna, CommandMeta, store_true
+from arclet.alconna import (
+    Args,
+    MultiVar,
+    Option,
+    Namespace,
+    Alconna,
+    CommandMeta,
+    store_true,
+    config,
+)
 
 from entari_plugin_user import User, UserSession
 
@@ -24,6 +33,9 @@ metadata(
     classifier=["工具"],
 )
 
+ns = Namespace("群管")
+config.namespaces["群管"] = ns
+
 
 mute = Alconna(
     "mute",
@@ -33,6 +45,7 @@ mute = Alconna(
         usage="/mute @成员 [时长(min)]",
         example="/mute @Komorebi 10",
     ),
+    namespace=ns,
 )
 
 
@@ -45,6 +58,7 @@ kick = Alconna(
         usage="/kick @成员 [-p|--permanent]",
         example="/kick @Komorebi",
     ),
+    namespace=ns,
 )
 
 withdraw = Alconna(
@@ -53,6 +67,7 @@ withdraw = Alconna(
         description="撤回消息",
         usage="回复指定消息",
     ),
+    namespace=ns,
 )
 withdraw.shortcut("recall", {"command": "withdraw", "prefix": True})
 withdraw.shortcut("撤回", {"command": "withdraw", "prefix": True})
@@ -66,6 +81,7 @@ guard = Alconna(
         usage="/guard guild-member-added guild-member-removed",
         example="/guard all",
     ),
+    namespace=ns,
 )
 
 

@@ -7,7 +7,7 @@ from prometheus_client import (
 )
 
 from arclet.entari import metadata, command, Session
-from arclet.alconna import Alconna, Subcommand, CommandMeta
+from arclet.alconna import Alconna, Subcommand, CommandMeta, Namespace, config
 from arclet.entari.message import MessageChain
 
 from . import listener as listener
@@ -27,6 +27,9 @@ metadata(
     classifier=["服务"],
 )
 
+ns = Namespace("Prometheus 监控")
+config.namespaces["Prometheus 监控"] = ns
+
 
 metrics_alc = Alconna(
     "metrics",
@@ -40,6 +43,7 @@ metrics_alc = Alconna(
         usage="/metrics",
         example="/metrics status",
     ),
+    namespace=ns,
 )
 metrics_disp = command.mount(metrics_alc)
 

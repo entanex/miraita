@@ -1,6 +1,6 @@
 import random
 
-from arclet.alconna import Alconna, CommandMeta
+from arclet.alconna import Alconna, CommandMeta, Namespace, config as alc_config
 from arclet.entari import metadata, command, scheduler, At, Image, MessageChain
 from entari_plugin_user import UserSession
 
@@ -15,6 +15,9 @@ metadata(
     config=Config,
 )
 
+ns = Namespace("娶群友")
+alc_config.namespaces["娶群友"] = ns
+
 waifu_alc = Alconna(
     "waifu",
     meta=CommandMeta(
@@ -22,6 +25,7 @@ waifu_alc = Alconna(
         usage="/waifu",
         example="/waifu",
     ),
+    namespace=ns,
 )
 waifu_disp = command.mount(waifu_alc)
 
