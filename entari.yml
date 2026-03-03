@@ -36,8 +36,10 @@ plugins:
 
   browser:
     browser_type: chromium
-    channel: chrome
+    channel: chromium
     headless: true
+    auto_download_browser: true
+    # playwright_download_host: https://cdn.playwright.dev/chrome-for-testing-public
 
   database:
     type: sqlite

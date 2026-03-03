@@ -37,7 +37,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   --mount=type=cache,target=/ms-playwright \
-  uv run --no-project playwright install --with-deps chromium chrome 
+  uv run --no-project playwright install --with-deps chromium 
 
 COPY --from=metadata-stage /tmp/VERSION /app/VERSION
 COPY main.py entari.yml /app/
