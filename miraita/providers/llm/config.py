@@ -41,6 +41,8 @@ class Config(BasicConfModel):
     models: list[ScopedModel] = model_field(default_factory=list)
     """List of configured models with their individual settings"""
 
+    __required__ = "api_key"
+
 
 _conf = plugin_config(Config)
 

@@ -53,6 +53,8 @@ def consume_waiting_state(state: str) -> WaitingRecord | None:
 
 
 def build_authorize_url(state: str) -> URL:
+    assert config.client_id
+
     return URL("https://wakatime.com/oauth/authorize").with_query(
         {
             "client_id": config.client_id,
