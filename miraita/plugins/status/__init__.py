@@ -1,4 +1,4 @@
-from arclet.alconna import Alconna, CommandMeta
+from arclet.alconna import Alconna, CommandMeta, Namespace, config
 from arclet.entari import metadata, command, Session, Image
 
 from .drawer import draw
@@ -10,6 +10,10 @@ metadata(
     classifier=["工具"],
 )
 
+ns = Namespace("服务器状态")
+config.namespaces["服务器状态"] = ns
+
+
 status = Alconna(
     "status",
     meta=CommandMeta(
@@ -17,6 +21,7 @@ status = Alconna(
         usage="/status",
         example="/status",
     ),
+    namespace=ns,
 )
 
 

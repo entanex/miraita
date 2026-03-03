@@ -1,4 +1,14 @@
-from arclet.alconna import Alconna, Args, MultiVar, Option, Subcommand, store_true
+from arclet.alconna import (
+    Alconna,
+    Args,
+    MultiVar,
+    Option,
+    Subcommand,
+    CommandMeta,
+    Namespace,
+    store_true,
+    config,
+)
 from arclet.entari import command, metadata
 from arclet.entari.const import ITEM_MESSAGE_REPLY
 from arclet.letoderea import BLOCK, Contexts
@@ -22,6 +32,9 @@ metadata(
     description="LLM 聊天",
     classifier=["AI", "工具"],
 )
+
+ns = Namespace("LLM")
+config.namespaces["LLM"] = ns
 
 llm_alc = Alconna(
     "llm",
@@ -48,6 +61,12 @@ llm_alc = Alconna(
         Option("-l|--list", help_text="查看模型列表"),
         help_text="查看当前模型信息",
     ),
+    meta=CommandMeta(
+        description="LLM 聊天",
+        usage="/llm [-m [MODEL<str>]] [-n]",
+        example="/llm hello",
+    ),
+    namespace=ns,
 )
 
 llm_alc.shortcut("ai", {"command": "llm", "fuzzy": True, "prefix": True})

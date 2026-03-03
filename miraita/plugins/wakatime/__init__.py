@@ -1,7 +1,14 @@
 import asyncio
 
 from arclet.letoderea import BLOCK
-from arclet.alconna import Alconna, Args, CommandMeta, Subcommand
+from arclet.alconna import (
+    Alconna,
+    Args,
+    CommandMeta,
+    Subcommand,
+    Namespace,
+    config as alc_config,
+)
 from arclet.entari import At, ChannelType, Image, Session, command, metadata
 from entari_plugin_database import AsyncSession
 from entari_plugin_user import UserSession, get_user
@@ -29,6 +36,9 @@ metadata(
     config=Config,
 )
 
+ns = Namespace("谁是卷王")
+alc_config.namespaces["谁是卷王"] = ns
+
 wakatime_alc = Alconna(
     "wakatime",
     Args["target?#目标", At | int],
@@ -39,6 +49,7 @@ wakatime_alc = Alconna(
         usage="/wakatime [@某人]",
         example="/wakatime",
     ),
+    namespace=ns,
 )
 wakatime_alc.shortcut("waka", {"command": "wakatime", "prefix": True})
 wakatime_disp = command.mount(wakatime_alc)
