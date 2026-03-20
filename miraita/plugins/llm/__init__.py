@@ -39,7 +39,12 @@ config.namespaces["LLM"] = ns
 llm_alc = Alconna(
     "llm",
     Args["content?#内容", MultiVar(str)],
-    Option("-m|--model", Args["model?#模型名称", str], help_text="指定模型"),
+    Option(
+        "-m|--model",
+        Args["model?#模型名称", str],
+        dest="model_opt",
+        help_text="指定模型",
+    ),
     Option(
         "-n|--new",
         dest="new_opt",
@@ -59,6 +64,7 @@ llm_alc = Alconna(
         "model",
         Args["model?#模型名称", str],
         Option("-l|--list", help_text="查看模型列表"),
+        dest="model_cmd",
         help_text="查看当前模型信息",
     ),
     meta=CommandMeta(
@@ -81,7 +87,7 @@ async def _(
     session: UserSession,
     content: command.Match[tuple[str, ...]],
     new_opt: command.Query[bool] = command.Query("new_opt.value"),
-    model: command.Query[str] = command.Query("model.model"),
+    model_opt: command.Query[str] = command.Query("model_opt.model"),
 ):
     reply = ctx.get(ITEM_MESSAGE_REPLY)
 
@@ -101,7 +107,7 @@ async def _(
             user_input=user_input,
             ctx=ctx,
             session=session,
-            model=model.result if model.available else None,
+            model=model_opt.result if model_opt.available else None,
             new=new_opt.result,
         )
         await session.send(answer)
@@ -186,7 +192,7 @@ async def _(session: UserSession):
     return BLOCK
 
 
-@llm_disp.assign("model", priority=20)
+@llm_disp.assign("model_cmd", priority=20)
 async def _(session: UserSession, model: command.Match[str]):
     if model.available:
         if model.result not in get_model_list():
@@ -204,7 +210,7 @@ async def _(session: UserSession, model: command.Match[str]):
     return BLOCK
 
 
-@llm_disp.assign("model.list")
+@llm_disp.assign("model_cmd.list")
 async def _(session: UserSession):
     await session.send(render_model_list())
     return BLOCK
