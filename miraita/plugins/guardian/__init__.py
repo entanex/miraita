@@ -93,7 +93,7 @@ async def _(session: UserSession, target: At | int, duration: int = 5):
 
     if (
         not check_member_permission(session.internal.member)
-        or session.user.authority <= 3
+        and session.user.authority <= 3
     ):
         await session.send("权限不足")
         return
@@ -128,7 +128,7 @@ async def _(
 
     if (
         not check_member_permission(session.internal.member)
-        or session.user.authority <= 3
+        and session.user.authority <= 3
     ):
         await session.send("权限不足")
         return
@@ -153,7 +153,7 @@ async def _(
 
 @command.on(withdraw)
 async def _(session: Session[MessageCreatedEvent], user: User):
-    if not check_member_permission(session.member) or user.authority <= 3:
+    if not check_member_permission(session.member) and user.authority <= 3:
         await session.send("权限不足")
         return
 

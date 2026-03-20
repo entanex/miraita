@@ -81,7 +81,7 @@ async def _(argot: Argot, session: UserSession):
     else:
         member = session.internal.member
 
-    if not check_member_permission(member) or session.user.authority <= 3:
+    if not check_member_permission(member) and session.user.authority <= 3:
         await session.send("权限不足")
         return
 
@@ -100,7 +100,7 @@ async def _(argot: Argot, session: UserSession, comment: str = ""):
     else:
         member = session.internal.member
 
-    if not check_member_permission(member) or session.user.authority <= 3:
+    if not check_member_permission(member) and session.user.authority <= 3:
         await session.send("权限不足")
         return
 
