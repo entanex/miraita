@@ -1705,7 +1705,7 @@ requires-dist = [
     { name = "entari-plugin-browser", specifier = ">=0.5.2" },
     { name = "entari-plugin-database", specifier = ">=0.2.1" },
     { name = "entari-plugin-server", specifier = ">=0.6.1" },
-    { name = "entari-plugin-user", specifier = ">=0.1.4" },
+    { name = "entari-plugin-user", specifier = ">=0.1.5" },
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "psutil", specifier = ">=7.0.0" },
