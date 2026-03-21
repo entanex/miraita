@@ -12,8 +12,7 @@ from arclet.alconna import (
 from arclet.entari import At, ChannelType, Image, Session, command, metadata
 from entari_plugin_database import AsyncSession
 from entari_plugin_user import UserSession, get_user
-from httpx import ConnectError, ConnectTimeout, ReadTimeout
-
+from asyncio import TimeoutError
 from miraita.providers.argot import Argot, on_argot
 from miraita.utils.reaction import with_reaction
 
@@ -91,7 +90,7 @@ async def _(session: UserSession, target: command.Match[At | int]):
             "请私聊我并使用 /wakatime bind 进行绑定"
         )
         return BLOCK
-    except (ConnectError, ConnectTimeout, ReadTimeout):
+    except TimeoutError:
         await session.send("网络超时，再试试叭")
         return BLOCK
     except Exception:

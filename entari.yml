@@ -9,7 +9,7 @@ basic:
   prefix: ["/"]
   ignore_self_message: true
   log:
-    level: info
+    level: debug
     ignores: ["aiosqlite.core", "httpcore._trace"]
     save: false
     rich_error: false
@@ -56,25 +56,23 @@ plugins:
         endpoint: "http://localhost:3010"
         token: ${{ env.MILKY_TOKEN }}
 
-  miraita: {}
+  miraita:
 
-  ?miraita.plugins.wakatime:
-    client_id: ${{ env.WAKA_CLIENT_ID }}
-    client_secret: ${{ env.WAKA_CLIENT_SECRET }}
-    register_route: /register
-    redirect_uri: ${{ env.WAKA_REDIRECT_URI }}
-    background_source: Lolicon
+    .plugins.wakatime:
+      client_id: ${{ env.WAKA_CLIENT_ID }}
+      client_secret: ${{ env.WAKA_CLIENT_SECRET }}
+      register_route: /register
+      redirect_uri: ${{ env.WAKA_REDIRECT_URI }}
+      background_source: Lolicon
 
-  ?miraita.providers.llm:
-    api_key: ${{ env.OPENAI_API_KEY }}
-    base_url: https://api.openai.com/v1
-    models:
-      - name: "deepseek/deepseek-chat"
-        api_key: ${{ env.DEEPSEEK_API_KEY }}
-        base_url: https://api.deepseek.com
-      - name: "gpt-4.1-mini"
-        alias: "gpt"
-      - name: "gemini/gemini-pro"
-        alias: "gemini"
-        api_key: ${{ env.GEMINI_API_KEY }}
-        base_url: https://generativelanguage.googleapis.com
+    .providers.llm:
+      api_key: ${{ env.OPENAI_API_KEY }}
+      base_url: https://api.openai.com/v1
+      models:
+        - name: "deepseek/deepseek-chat"
+          api_key: ${{ env.DEEPSEEK_API_KEY }}
+          base_url: https://api.deepseek.com
+
+        - name: "deepseek/deepseek-reasoner"
+          api_key: ${{ env.DEEPSEEK_API_KEY }}
+          base_url: https://api.deepseek.com

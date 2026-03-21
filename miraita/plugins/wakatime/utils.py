@@ -3,9 +3,7 @@ import re
 from pathlib import Path
 from typing import Literal
 
-from launart import Launart
-
-from miraita.providers.httpx import HttpxClientService
+from arclet.entari import Entari
 
 from .config import (
     WAKATIME_IMAGE_DIR,
@@ -20,10 +18,10 @@ def image_to_base64(image_path: Path) -> str:
 
 
 async def get_lolicon_image() -> str:
-    client = Launart.current().get_component(HttpxClientService).session
-    response = await client.get("https://api.lolicon.app/setu/v2")
+    app = Entari.current()
+    response = await app.http.get("https://api.lolicon.app/setu/v2")
     response.raise_for_status()
-    return response.json()["data"][0]["urls"]["original"]
+    return (await response.json())["data"][0]["urls"]["original"]
 
 
 async def get_background_image() -> str | Path:

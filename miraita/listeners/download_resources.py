@@ -8,12 +8,11 @@ from hashlib import sha256
 from pathlib import Path
 
 from launart import Launart
-from arclet.entari import Startup
+from arclet.entari import Startup, Entari
 from arclet.letoderea import on
 
 from miraita import logger
 from miraita.configs import RESOURCE_DIR
-from miraita.providers.httpx import HttpxClientService
 
 REMOTE_ZIP_URL = "https://raw.githubusercontent.com/entanex/miraita-resources/master/miraita-resources.zip"
 VERSION_FILE = "__version__"
@@ -65,15 +64,14 @@ def _safe_extract(zf: zipfile.ZipFile, target_dir: Path) -> None:
 
 
 @on(Startup)
-async def check_resources(launart: Launart):
-    client = launart.get_component(HttpxClientService)
+async def check_resources(app: Entari, launart: Launart):
     try:
         is_empty = not any(RESOURCE_DIR.iterdir())
         local_version = _read_local_version()
 
-        response = await client.session.get(REMOTE_ZIP_URL)
+        response = await app.http.get(REMOTE_ZIP_URL)
         response.raise_for_status()
-        zip_bytes = response.content
+        zip_bytes = await response.read()
 
         with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
             remote_version = _read_remote_version_from_zip(zf)
