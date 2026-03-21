@@ -1,7 +1,7 @@
 import random
 
 from arclet.alconna import Alconna, CommandMeta, Namespace, config as alc_config
-from arclet.entari import metadata, command, scheduler, At, Image, MessageChain
+from arclet.entari import metadata, command, scheduler, Image, MessageChain
 from entari_plugin_user import UserSession
 
 from .config import Config, config
@@ -57,8 +57,7 @@ async def _(session: UserSession):
     msg = MessageChain(
         [
             Image(src=member.user.avatar),
-            "你今天的群老婆是",
-            At(member.user.id, name=member.user.name),
+            f"你今天的群老婆是 @{member.user.name}",
         ]
     )
 
