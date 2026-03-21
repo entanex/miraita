@@ -18,7 +18,7 @@ from arclet.alconna import (
     config,
 )
 
-from entari_plugin_user import User, UserSession
+from entari_plugin_user import UserSession
 
 from .utils import resolve_events, check_member_permission
 from . import listener as listener
@@ -152,8 +152,8 @@ async def _(
 
 
 @command.on(withdraw)
-async def _(session: Session[MessageCreatedEvent], user: User):
-    if not check_member_permission(session.member) and user.authority <= 3:
+async def _(session: UserSession[MessageCreatedEvent]):
+    if not check_member_permission(session.member) and session.user.authority <= 3:
         await session.send("权限不足")
         return
 
