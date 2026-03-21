@@ -42,6 +42,7 @@ async def render_wakatime(data: WakaTime) -> bytes:
             viewport={"width": 550, "height": 10},
             base_url=WAKATIME_TEMPLATE_DIR.as_uri(),
         ),
+        screenshot_option={"type": "jpeg", "quality": 80},
     )
 
 
