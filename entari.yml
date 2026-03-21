@@ -52,7 +52,7 @@ plugins:
     path: satori
     token: miraita2310
     adapters:
-      - $path: "@milky.main:MilkyWebsocketAdapter"
+      - $path: "@milky.main"
         endpoint: "http://localhost:3010"
         token: ${{ env.MILKY_TOKEN }}
 
