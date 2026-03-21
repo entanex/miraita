@@ -21,6 +21,8 @@ class ScopedModel(BasicConfModel):
     """Base URL for the OpenAI API"""
     prompt: str = ""
     """Default prompt template"""
+    hide: bool = False
+    """Whether show it in model list"""
     extra: dict[str, Any] = model_field(default_factory=dict)
     """Extra parameters to pass to the LLM API call"""
 
@@ -47,12 +49,27 @@ class Config(BasicConfModel):
 _conf = plugin_config(Config)
 
 
+def get_model_id(model: ScopedModel) -> str:
+    return model.alias or model.name
+
+
 def get_model_config(model_name: str | None = None) -> ScopedModel:
     if model_name is None:
         if not _conf.models:
             raise ModelNotFoundError("No models configured.")
 
         model_name = get_default_model()
+
+    for model in _conf.models:
+        if get_model_id(model) == model_name:
+            if model.api_key is None:
+                model.api_key = _conf.api_key
+            if (
+                model.base_url == "https://api.openai.com/v1"
+                and _conf.base_url != "https://api.openai.com/v1"
+            ):
+                model.base_url = _conf.base_url
+            return model
 
     for model in _conf.models:
         if model.name == model_name or model.alias == model_name:
@@ -68,4 +85,4 @@ def get_model_config(model_name: str | None = None) -> ScopedModel:
 
 
 def get_model_list() -> set[str]:
-    return {m.name for m in _conf.models} | {m.alias for m in _conf.models if m.alias}
+    return {get_model_id(m) for m in _conf.models if not m.hide}

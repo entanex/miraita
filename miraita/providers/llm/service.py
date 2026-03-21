@@ -8,7 +8,7 @@ from launart.status import Phase
 
 from miraita.providers.prometheus import get_system_metrics  # entari: plugin
 
-from .events.tools import tools
+from .tools.event import tools
 from ._callback import TokenUsageHandler
 from ._types import Message
 from .config import get_model_config

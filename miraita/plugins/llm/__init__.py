@@ -17,7 +17,7 @@ from entari_plugin_user import UserSession
 from miraita.utils.reaction import with_reaction
 from miraita.providers.llm._jsondata import set_default_model
 from miraita.providers.llm.exception import ModelNotFoundError
-from miraita.providers.llm.config import get_model_config, get_model_list
+from miraita.providers.llm.config import get_model_config, get_model_id, get_model_list
 
 from . import chat as chat
 from .manager import LLMSessionManager
@@ -200,9 +200,9 @@ async def _(session: UserSession, model: command.Match[str]):
             return BLOCK
 
         conf = get_model_config(model.result)
-        set_default_model(conf.name)
+        set_default_model(get_model_id(conf))
 
-        await session.send(f"已切换默认模型: {conf.name}")
+        await session.send(f"已切换默认模型: {get_model_id(conf)}")
         return BLOCK
 
     conf = get_model_config()

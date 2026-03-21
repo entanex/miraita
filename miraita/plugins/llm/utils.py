@@ -4,7 +4,7 @@ from entari_plugin_user import UserSession
 
 from .manager import LLMSessionManager
 from miraita.providers.llm._jsondata import get_default_model
-from miraita.providers.llm.config import _conf
+from miraita.providers.llm.config import _conf, get_model_id
 from miraita.providers.llm.model import LLMSession
 
 
@@ -35,9 +35,10 @@ def render_model_list() -> str:
     default_model = get_default_model()
     lines = [f"模型列表（共 {len(_conf.models)} 个）"]
     for model in _conf.models:
-        alias = f" ({model.alias})" if model.alias else ""
-        is_default = " [默认]" if default_model == model.name else ""
-        lines.append(f"- {model.name}{alias}{is_default}")
+        model_id = get_model_id(model)
+        target = f" -> {model.name}" if model.alias else ""
+        is_default = " [默认]" if default_model == model_id else ""
+        lines.append(f"- {model_id}{target}{is_default}")
     return "\n".join(lines)
 
 

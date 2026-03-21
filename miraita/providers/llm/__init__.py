@@ -1,7 +1,7 @@
 from arclet.entari import metadata
 
 from .config import Config
-from .events import LLMToolEvent as LLMToolEvent
+from .tools import LLMToolEvent as LLMToolEvent
 from .log import _suppress_litellm_logging
 from . import listener as listener
 

@@ -11,7 +11,7 @@ from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select
 
 from miraita.providers.llm._types import Message
-from miraita.providers.llm.events.tools import LLMToolEvent, available_functions
+from miraita.providers.llm.tools.event import LLMToolEvent, available_functions
 from miraita.providers.llm.log import logger
 from miraita.providers.llm.model import LLMSession, SessionContext
 from miraita.providers.llm.service import llm
