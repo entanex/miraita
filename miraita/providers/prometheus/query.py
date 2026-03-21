@@ -145,10 +145,13 @@ def get_matcher_stats(limit: int = 10) -> MatcherStatsResponse:
                     duration_samples.append(sample)
 
         matcher_stats = {}
+        plugin_prefix = "miraita.plugins"
 
         for sample in calling_samples:
             if sample.name.endswith("_total"):
                 plugin_name = sample.labels.get("plugin_name", "unknown")
+                if not plugin_name.startswith(plugin_prefix):
+                    continue
                 call_count = sample.value
 
                 if plugin_name not in matcher_stats:
@@ -163,6 +166,8 @@ def get_matcher_stats(limit: int = 10) -> MatcherStatsResponse:
 
         for sample in duration_samples:
             plugin_name = sample.labels.get("plugin_name", "unknown")
+            if not plugin_name.startswith(plugin_prefix):
+                continue
 
             if plugin_name in matcher_stats:
                 matcher_stats[plugin_name].total_duration += sample.value
