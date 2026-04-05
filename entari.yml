@@ -10,7 +10,10 @@ basic:
   ignore_self_message: true
   log:
     level: debug
-    ignores: ["aiosqlite.core", "httpcore._trace"]
+    ignores:
+      - aiosqlite.core
+      - httpcore._trace
+      - sentry_sdk.integrations.logging
     save: false
     rich_error: false
     short_level: true
@@ -57,6 +60,16 @@ plugins:
         token: ${{ env.MILKY_TOKEN }}
 
   miraita:
+
+    .plugins.sentry:
+      dsn: ${{ env.SENTRY_DSN }}
+      environment: ${{ env.ENVIRONMENT }}   
+      default_integrations: true
+      auto_enabling_integrations: true
+      enable_tracing: false
+      enable_logs: true
+      traces_sample_rate: 1.0
+      profiles_sample_rate: 1.0
 
     .plugins.wakatime:
       client_id: ${{ env.WAKA_CLIENT_ID }}

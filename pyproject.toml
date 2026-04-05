@@ -23,6 +23,11 @@ dev = [
     "email-validator>=2.2.0", 
     "rich>=14.1.0",
 ]
+adapters = [
+    "satori-python-adapter-milky>=0.3.1",
+    "satori-python-adapter-onebot11>=0.4.1",
+    "satori-python-adapter-satori>=0.4.0",
+]
 llm = [
     "docstring-parser>=0.17.0",
     "litellm>=1.82.0",
@@ -30,10 +35,8 @@ llm = [
 prometheus = [
     "prometheus-client>=0.22.1",
 ]
-adapters = [
-    "satori-python-adapter-milky>=0.3.1",
-    "satori-python-adapter-onebot11>=0.4.1",
-    "satori-python-adapter-satori>=0.4.0",
+sentry = [
+    "sentry-sdk>=2.57.0",
 ]
 
 [tool.uv.build-backend]
