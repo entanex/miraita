@@ -7,25 +7,59 @@ services:
       - "2310:2310"
     volumes:
       - "./entari.yml:/app/entari.yml"
-      - "./.miraita:/app/.miraita"
+      - "./miraita:/app/.miraita"
     env_file:
       - ".env"
     networks:
       - bot-network
 
-  llonebot:
-    image: initialencounter/llonebot:latest
-    container_name: llonebot
-    restart: always
+  pmhq:
+    image: linyuchen/pmhq:7.3.2
+    container_name: pmhq
+    privileged: true
+    environment:
+      - ENABLE_HEADLESS=false
+    networks:
+      - bot-network
+    volumes:
+      - qq_volume:/root/.config/QQ
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:13000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  llbot:
+    image: linyuchen/llbot:7.11.0
+    container_name: llbot
     ports:
       - "3010:3010"  # Milky
       - "5600:5600"  # Satori
       - "3080:3080"  # WebUI
-    volumes:
-      - "./QQ:/root/.config/QQ"
-      - "./llonebot:/root/llonebot"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - PMHQ_HOST=pmhq
+      - WEBUI_PORT=3080
     networks:
       - bot-network
+    volumes:
+      - qq_volume:/root/.config/QQ
+      - ./llbot_config:/app/llbot/data:rw
+    depends_on:
+      - pmhq
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps | grep '[n]ode'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  qq_volume:
 
 networks:
   bot-network:
