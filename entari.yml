@@ -24,6 +24,11 @@ plugins:
   $prelude:
     - ::auto_reload
 
+  $prefix:
+    - key: ""
+      plugins:
+        - miraita
+
   .record_message:
     record_send: true
 

@@ -5,7 +5,7 @@ from arclet.entari.config import config_model_validate
 from arclet.entari.event.config import ConfigReload
 from arclet.entari.event.send import SendResponse
 from arclet.letoderea import BLOCK, on
-from arclet.letoderea.typing import Contexts
+from arclet.letoderea.context import Contexts
 from entari_plugin_user import UserSession
 
 from miraita.utils.reaction import with_reaction

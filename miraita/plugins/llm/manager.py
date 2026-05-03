@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import litellm
 from arclet.letoderea import ExitState
-from arclet.letoderea.typing import Contexts, generate_contexts
+from arclet.letoderea.context import Contexts, generate_contexts
 from entari_plugin_user import User, UserSession
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select

@@ -33,7 +33,7 @@ class LLMToolEvent:
 
 
 tools_pub = define(LLMToolEvent, name="tools_pub")
-tools_pub.bind(*get_providers(MessageCreatedEvent))
+tools_pub.providers.extend(get_providers(MessageCreatedEvent))
 
 
 tools = []

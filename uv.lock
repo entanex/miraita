@@ -230,7 +230,7 @@ wheels = [
 [[package]]
 name = "arclet-entari"
 version = "0.17.4"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/ArcletProject/Entari.git#9c5734d452e3d5076bfe45327f6c4d7fde4f97ea" }
 dependencies = [
     { name = "arclet-alconna" },
     { name = "arclet-alconna-tools" },
@@ -239,10 +239,6 @@ dependencies = [
     { name = "satori-python-client" },
     { name = "satori-python-core" },
     { name = "simpleeval" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/1e/eb/2da6e2da3b2c98f6f7cf416829eac23cf72f018f86d72549220713535199/arclet_entari-0.17.4.tar.gz", hash = "sha256:33aa91d57dd81e7f9dd64f7863165ab774dd2fa988d6b95a24997dd16dbe7df3", size = 84276, upload-time = "2026-03-20T12:36:23.992Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/91/3d8342ff48d186637e0e742d43d971a2021ca0168a78d0355be63794427c/arclet_entari-0.17.4-py3-none-any.whl", hash = "sha256:8876561aa759b5569ad33ef60020594b2a18cda358b7c22422fd245fdc928afa", size = 105950, upload-time = "2026-03-20T12:36:22.437Z" },
 ]
 
 [package.optional-dependencies]
@@ -259,15 +255,15 @@ pydantic = [
 
 [[package]]
 name = "arclet-letoderea"
-version = "0.20.7"
+version = "0.21.0rc3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "tarina" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/90/fa/8653aa902e0a3e2ebbe56e9afea7f0845b499598abcf6b9261f8daef6005/arclet_letoderea-0.20.7.tar.gz", hash = "sha256:7d5f2a0b83ee971c083c0e531ae5824dbd7ae09996d954291dbf946766458f13", size = 37436, upload-time = "2026-02-28T06:06:42.455Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/a8/d6c57a7bba79495588b4a8a817f1bc2175493fd3f0f7d3c252749830267b/arclet_letoderea-0.21.0rc3.tar.gz", hash = "sha256:793e111f914fddee4794748a7aeda3580f31c0b6a390f3986ce451b324d445c9", size = 42310, upload-time = "2026-04-29T02:04:51.442Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/8e/d9b0fbd496577a8a5482ac438a6603c1f798766399555b1462f95ddad022/arclet_letoderea-0.20.7-py3-none-any.whl", hash = "sha256:be9586a5a22808ead25e7f8ae4bfef86a471d645edc9f2203598422598f51f08", size = 32393, upload-time = "2026-02-28T06:06:40.864Z" },
+    { url = "https://files.pythonhosted.org/packages/22/be/6996eae31eaaf7f73d3827d2cbcbb1fccc4d4881711f0bdfa48a1f147388/arclet_letoderea-0.21.0rc3-py3-none-any.whl", hash = "sha256:b5c581439f9dedfba3260f0784336543e77ade95c00dfcd833fb19bbbdacdc38", size = 36008, upload-time = "2026-04-29T02:04:49.569Z" },
 ]
 
 [[package]]
@@ -1704,7 +1700,7 @@ sentry = [
 
 [package.metadata]
 requires-dist = [
-    { name = "arclet-entari", extras = ["full", "pydantic"], specifier = ">=0.17.4" },
+    { name = "arclet-entari", extras = ["full", "pydantic"], git = "https://github.com/ArcletProject/Entari.git" },
     { name = "entari-plugin-browser", specifier = ">=0.5.2" },
     { name = "entari-plugin-database", specifier = ">=0.2.1" },
     { name = "entari-plugin-server", specifier = ">=0.6.1" },
@@ -2824,7 +2820,7 @@ wheels = [
 
 [[package]]
 name = "satori-python"
-version = "1.3.2"
+version = "1.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2838,9 +2834,9 @@ dependencies = [
     { name = "websockets" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/31/03/b49303548e6a4e52bfbd47ace99cb0167297fbc5da36e30221a330432cb9/satori_python-1.3.2.tar.gz", hash = "sha256:8bec5de3ebed528f03858bdb2461c4ef4e440fb6fb3b9ef4987bbfe98c44b2c4", size = 46046, upload-time = "2026-03-12T03:43:48.397Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/2a/e7d94e0caf575b405c5695eff9cc031b263909d0ab1bc7d3abb565507c8d/satori_python-1.3.3.tar.gz", hash = "sha256:39456724342c985862744a6a70d129ad4f1f1dae8f078074cec432692d36acfb", size = 47060, upload-time = "2026-04-17T08:54:31.409Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/37/e8bd8d58cb3b9dcbaf2cadbd4b4f692f624bdcf79a5d270bfea8ffdc6891/satori_python-1.3.2-py3-none-any.whl", hash = "sha256:d16675e0c9ab9300b59060e231e1f9da5a66a01080840b3a83ba57df6fd4191e", size = 53309, upload-time = "2026-03-12T03:43:47.226Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/56/9da1e6a63037ce1491a9cde018f32b3c806b03e35aa633e6566799a31c31/satori_python-1.3.3-py3-none-any.whl", hash = "sha256:ff4515c2129d3d48f6e7596e66a583abfd90fb947de58c54a898d6c17e17e1e8", size = 54418, upload-time = "2026-04-17T08:54:30.295Z" },
 ]
 
 [[package]]
