@@ -85,8 +85,11 @@ async def handle_message(session: Session[MessageCreatedEvent]):
     if session.user.id == session.account.self_id:
         return
 
-    content = normalize_message(session.elements)
-    if not content:
+    try:
+        content = normalize_message(session.elements)
+        if not content:
+            return
+    except RuntimeError:
         return
 
     key = state_key(
