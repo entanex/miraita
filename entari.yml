@@ -78,6 +78,16 @@ plugins:
       redirect_uri: ${{ env.WAKA_REDIRECT_URI }}
       background_source: Lolicon
 
+    .plugins.repeater:
+      on_repeat:
+        - min_times: 3
+          probability: 0.3
+
+        - min_times: 4
+          probability: 0.3
+          reply: 打断复读！
+
+
     .providers.llm:
       api_key: ${{ env.OPENAI_API_KEY }}
       base_url: https://api.openai.com/v1
