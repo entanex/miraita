@@ -1673,6 +1673,7 @@ dependencies = [
     { name = "pillow" },
     { name = "psutil" },
     { name = "py-cpuinfo" },
+    { name = "satori-python" },
 ]
 
 [package.dev-dependencies]
@@ -1709,6 +1710,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "psutil", specifier = ">=7.0.0" },
     { name = "py-cpuinfo", specifier = ">=9.0.0" },
+    { name = "satori-python", specifier = "==1.3.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -2820,7 +2822,7 @@ wheels = [
 
 [[package]]
 name = "satori-python"
-version = "1.3.3"
+version = "1.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2834,9 +2836,9 @@ dependencies = [
     { name = "websockets" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c3/2a/e7d94e0caf575b405c5695eff9cc031b263909d0ab1bc7d3abb565507c8d/satori_python-1.3.3.tar.gz", hash = "sha256:39456724342c985862744a6a70d129ad4f1f1dae8f078074cec432692d36acfb", size = 47060, upload-time = "2026-04-17T08:54:31.409Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/03/b49303548e6a4e52bfbd47ace99cb0167297fbc5da36e30221a330432cb9/satori_python-1.3.2.tar.gz", hash = "sha256:8bec5de3ebed528f03858bdb2461c4ef4e440fb6fb3b9ef4987bbfe98c44b2c4", size = 46046, upload-time = "2026-03-12T03:43:48.397Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/56/9da1e6a63037ce1491a9cde018f32b3c806b03e35aa633e6566799a31c31/satori_python-1.3.3-py3-none-any.whl", hash = "sha256:ff4515c2129d3d48f6e7596e66a583abfd90fb947de58c54a898d6c17e17e1e8", size = 54418, upload-time = "2026-04-17T08:54:30.295Z" },
+    { url = "https://files.pythonhosted.org/packages/89/37/e8bd8d58cb3b9dcbaf2cadbd4b4f692f624bdcf79a5d270bfea8ffdc6891/satori_python-1.3.2-py3-none-any.whl", hash = "sha256:d16675e0c9ab9300b59060e231e1f9da5a66a01080840b3a83ba57df6fd4191e", size = 53309, upload-time = "2026-03-12T03:43:47.226Z" },
 ]
 
 [[package]]
