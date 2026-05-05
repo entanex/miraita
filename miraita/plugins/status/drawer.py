@@ -36,8 +36,9 @@ system = platform.uname()
 def draw() -> bytes:
     loaded_plugins = [
         plugin
-        for plugin in get_plugins()
+        for plugin in get_plugins(subplugged=True)
         if plugin.id.startswith(("miraita.plugins.", "arclet.entari.builtins."))
+        and len(plugin.id.split(".")) == 3
     ]
 
     adlam_fnt = ImageFont.truetype(str(adlam_font_path), 36)
