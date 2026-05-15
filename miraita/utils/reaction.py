@@ -15,6 +15,9 @@ class ReactionPropagator(Propagator):
         if session.channel.type == ChannelType.DIRECT:
             return
 
+        if session.account.platform == "qq":
+            return
+
         self.emoji = self.waiting_emoji[self._get_emoji_index(session)]
 
         await session.reaction_create(
@@ -24,6 +27,9 @@ class ReactionPropagator(Propagator):
 
     async def finish(self, session: Session[MessageCreatedEvent]):
         if session.channel.type == ChannelType.DIRECT:
+            return
+
+        if session.account.platform == "qq":
             return
 
         if self.emoji:
