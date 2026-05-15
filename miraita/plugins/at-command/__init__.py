@@ -16,10 +16,8 @@ metadata(
 
 @(on(MessageCreatedEvent, priority=1000).if_(filter_.public).if_(filter_.notice_me))
 async def at_command(session: UserSession):
-    try:
-        elements = session.internal.elements
-        await command.execute(f"{config.execute} {elements}", session=session.internal)
-    except RuntimeError:
-        await command.execute(config.execute, session=session.internal)
+    if session.internal.elements:
+        return
 
+    await command.execute(config.execute, session=session.internal)
     return BLOCK
