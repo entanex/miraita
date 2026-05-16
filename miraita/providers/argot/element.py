@@ -1,6 +1,7 @@
+import time
 from datetime import timedelta
-from typing import Any
 from dataclasses import field, dataclass
+from typing import Any
 
 from satori.element import Element, register_element
 
@@ -23,7 +24,7 @@ class Argot(Element):
         self.data = data
 
         if isinstance(expired_at, timedelta):
-            self.expired_at = int(expired_at.total_seconds())
+            self.expired_at = int(time.time() + expired_at.total_seconds())
         else:
             self.expired_at = expired_at
 
