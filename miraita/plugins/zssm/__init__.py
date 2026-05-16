@@ -140,7 +140,11 @@ async def _(content: command.Match[MessageChain], ctx: Contexts, session: Sessio
         img_content = await llm.vision(url)
         user_prompt += f"<type: image, id: {hash(url)}>{img_content}\n</type: image>"
 
-    response = await llm.generate(user_prompt, system=SYSTEM_PROMPT, output=Output)
+    try:
+        response = await llm.generate(user_prompt, system=SYSTEM_PROMPT, output=Output)
+    except RuntimeError:
+        await session.send("解析失败, 请重试")
+        return
 
     if response.output is None:
         await session.send("解析失败, 请重试")
