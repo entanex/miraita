@@ -9,7 +9,7 @@ from arclet.alconna import (
     store_true,
     config,
 )
-from arclet.entari import command, metadata
+from arclet.entari import MessageChain, command, metadata
 from arclet.entari.const import ITEM_MESSAGE_REPLY
 from arclet.letoderea import BLOCK, Contexts
 from entari_plugin_user import UserSession
@@ -110,11 +110,12 @@ async def _(
             model=model_opt.result if model_opt.available else None,
             new=new_opt.result,
         )
-        await session.send(answer)
+        if answer != "[END_OF_RESPONSE]":
+            await session.send(answer)
     except ModelNotFoundError as e:
-        await session.send(str(e))
+        await session.send(MessageChain(str(e)))
     except Exception as e:
-        await session.send(str(e))
+        await session.send(MessageChain(str(e)))
 
     return BLOCK
 
@@ -149,10 +150,18 @@ async def _(session: UserSession, session_id: command.Match[str]):
 
         session_id.result = selected
 
+    info = await LLMSessionManager.get_current_session_info(session.user)
     deleted = await LLMSessionManager.delete(session.user, session_id.result)
     if deleted:
-        await LLMSessionManager.create_new_session(session.user)
-        await session.send("删除成功，已自动创建新会话")
+        rows = await LLMSessionManager.list_sessions(session.user)
+        if not rows:
+            await LLMSessionManager.create_new_session(session.user)
+            await session.send("删除成功，已自动创建新会话")
+        elif info and info["session_id"] == session_id.result:
+            await LLMSessionManager.switch(session.user, rows[0].session_id)
+            await session.send("删除成功，已自动切换到最近的会话")
+        else:
+            await session.send("删除成功，当前会话列表：\n" + render_session_list(rows))
     else:
         await session.send("未找到对应会话")
     return BLOCK

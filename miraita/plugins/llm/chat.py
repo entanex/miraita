@@ -1,6 +1,6 @@
 from collections import deque
 
-from arclet.entari import MessageCreatedEvent, filter_
+from arclet.entari import MessageChain, MessageCreatedEvent, filter_
 from arclet.entari.config import config_model_validate
 from arclet.entari.event.config import ConfigReload
 from arclet.entari.event.send import SendResponse
@@ -9,6 +9,7 @@ from arclet.letoderea.context import Contexts
 from entari_plugin_user import UserSession
 
 from miraita.utils.reaction import with_reaction
+from miraita.providers.llm.exception import ModelNotFoundError
 from miraita.providers.llm.config import Config, _conf
 
 from .manager import LLMSessionManager
@@ -42,6 +43,16 @@ if _conf.enable_direct_message:
             return BLOCK
 
         msg = session.internal.elements.extract_plain_text()
-        answer = await LLMSessionManager.chat(user_input=msg, ctx=ctx, session=session)
-        await session.send(answer)
+        try:
+            answer = await LLMSessionManager.chat(
+                user_input=msg,
+                ctx=ctx,
+                session=session,
+            )
+            if answer != "[END_OF_RESPONSE]":
+                await session.send(answer)
+        except ModelNotFoundError as e:
+            await session.send(MessageChain(str(e)))
+        except Exception as e:
+            await session.send(MessageChain(str(e)))
         return BLOCK

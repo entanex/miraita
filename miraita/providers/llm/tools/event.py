@@ -2,6 +2,7 @@ import inspect
 from typing import Annotated, Any, get_args
 
 from arclet.entari import MessageCreatedEvent
+from arclet.entari.config.dc_schema import _MISSING, SchemaGenerator
 from arclet.letoderea import Subscriber, define
 from arclet.letoderea.provider import get_providers
 from arclet.letoderea.typing import Result
@@ -10,18 +11,8 @@ from tarina import Empty
 from tarina.generic import get_origin, origin_is_union
 from typing_extensions import Doc
 
+from ..log import logger
 from .._types import JSON_TYPE
-
-mapping = {
-    str: "string",
-    int: "integer",
-    float: "number",
-    bool: "boolean",
-    list: "array",
-    set: "array",
-    tuple: "array",
-    dict: "object",
-}
 
 
 class LLMToolEvent:
@@ -38,6 +29,8 @@ tools_pub.providers.extend(get_providers(MessageCreatedEvent))
 
 tools = []
 available_functions: dict[str, Subscriber[JSON_TYPE]] = {}
+
+_generator = SchemaGenerator()
 
 
 @tools_pub.check
@@ -66,8 +59,8 @@ def _register_tool(_, sub: Subscriber):
             if doc := next((i for i in meta if isinstance(i, Doc)), None):
                 documentation = doc.documentation
         properties[param.name] = {
+            **_generator.get_field_schema(t, _MISSING),
             "title": param.name.title(),
-            "type": mapping.get(get_origin(t), "object"),
             "description": documentation,
         }
 
@@ -88,4 +81,10 @@ def _register_tool(_, sub: Subscriber):
     )
     available_functions[sub.__name__] = sub
     sub._attach_disposes(lambda s: available_functions.pop(s.__name__, None))  # type: ignore
+    sub._attach_disposes(
+        lambda s: tools.pop(
+            next(i for i, t in enumerate(tools) if t["function"]["name"] == s.__name__)
+        )
+    )
+    logger.debug(f"Registered tool: {sub.__name__}")
     return True

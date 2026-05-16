@@ -29,6 +29,7 @@ class ToolMessage(TypedDict):
     role: Literal["tool"]
     content: str
     tool_call_id: str
+    name: NotRequired[str | None]
 
 
 Message: TypeAlias = SystemMessage | UserMessage | AssistantMessage | ToolMessage

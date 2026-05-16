@@ -1,5 +1,5 @@
 from arclet.entari import plugin
-from entari_plugin_browser import playwright_api
+from entari_plugin_browser import playwright_api, _config
 
 from miraita.providers.llm.log import logger
 
@@ -9,7 +9,14 @@ tools = plugin.dispatch(LLMToolEvent)
 
 
 async def get_browser():
-    return await playwright_api.playwright.chromium.launch()
+    if _config.browser_type == "chromium":
+        return await playwright_api.playwright.chromium.launch()
+    elif _config.browser_type == "firefox":
+        return await playwright_api.playwright.firefox.launch()
+    elif _config.browser_type == "webkit":
+        return await playwright_api.playwright.webkit.launch()
+    else:
+        raise ValueError(f"Unsupported browser type: {_config.browser_type}")
 
 
 @tools

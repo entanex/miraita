@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from typing import Literal, TypeAlias, cast
 
@@ -36,7 +35,7 @@ class SessionContext(Base):
     )
 
     role: Mapped[ROLE] = mapped_column(String(16))
-    content: Mapped[str] = mapped_column(Text)
+    content: Mapped[list] = mapped_column(JSON, nullable=True)
     reasoning_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     name: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
@@ -47,7 +46,7 @@ class SessionContext(Base):
 
     @property
     def message(self) -> Message:
-        msg = {"role": self.role, "content": self.content}
+        msg: dict = {"role": self.role, "content": self.content}
 
         if self.role == "user":
             if self.name:
@@ -57,7 +56,7 @@ class SessionContext(Base):
             if self.reasoning_content:
                 msg["reasoning_content"] = self.reasoning_content
             if self.tool_calls:
-                msg["tool_calls"] = json.dumps(self.tool_calls)
+                msg["tool_calls"] = self.tool_calls
             msg["content"] = self.content
 
         elif self.role == "tool" and self.tool_call_id:

@@ -4,14 +4,14 @@ from typing import Any, overload
 from uuid import uuid4
 
 import litellm
-from arclet.letoderea import ExitState
+from arclet.letoderea.exceptions import ExitState, _ExitException
 from arclet.letoderea.context import Contexts, generate_contexts
 from entari_plugin_user import User, UserSession
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select
 
 from miraita.providers.llm._types import Message
-from miraita.providers.llm.tools.event import LLMToolEvent, available_functions
+from miraita.providers.llm.tools.event import LLMToolEvent, available_functions, tools
 from miraita.providers.llm.log import logger
 from miraita.providers.llm.model import LLMSession, SessionContext
 from miraita.providers.llm.service import llm
@@ -236,11 +236,15 @@ class LLMSessionManager:
 
         messages = await cls._load_messages(llm_session.session_id)
         final_answer = ""
+        exit_loop = False
+
         for _ in range(8):
             response = await llm.generate(
                 messages,
                 stream=False,
                 model=model,
+                tools=tools.copy(),
+                tool_choice="auto",
                 user=session.user.name,
             )
 
@@ -256,10 +260,9 @@ class LLMSessionManager:
             assistant_message: Message = {
                 "role": "assistant",
                 "content": response_message.content,
-                "tool_calls": [tc.model_dump() for tc in tool_calls]
-                if tool_calls
-                else None,
             }
+            if tool_calls:
+                assistant_message["tool_calls"] = [tc.model_dump() for tc in tool_calls]
             messages.append(assistant_message)
             await cls._persist_message(llm_session.session_id, assistant_message)
 
@@ -285,10 +288,14 @@ class LLMSessionManager:
                             ctx1 | function_args, inner=True
                         )
                         if isinstance(resp, ExitState):
-                            if resp.args[0] is not None:
-                                result = {"ok": True, "data": resp.args[0]}
-                            else:
-                                result = {"ok": False, "error": "No response"}
+                            if resp is ExitState.stop:
+                                continue
+                            result = {"ok": True, "data": "已结束对话"}
+                            exit_loop = True
+                        elif isinstance(resp, _ExitException):
+                            result: dict[str, Any] = {"ok": True, "data": resp.args[0]}
+                            if resp.args[1]:
+                                exit_loop = True
                         else:
                             result = {"ok": True, "data": resp}
                     except Exception as e:
@@ -297,10 +304,18 @@ class LLMSessionManager:
                     tool_message: Message = {
                         "tool_call_id": tool_call.id,
                         "role": "tool",
+                        "name": function_name,
                         "content": json.dumps(result, ensure_ascii=False),
                     }
                     messages.append(tool_message)
                     await cls._persist_message(llm_session.session_id, tool_message)
+
+                    if exit_loop:
+                        break
+
+                if exit_loop:
+                    final_answer = "[END_OF_RESPONSE]"
+                    break
                 continue
 
             final_answer = response_message.content or ""

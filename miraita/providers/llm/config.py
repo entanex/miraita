@@ -44,8 +44,44 @@ class Config(BasicConfModel):
     """Whether to enable direct conversations in private messages"""
     models: list[ScopedModel] = model_field(default_factory=list)
     """List of configured models with their individual settings"""
+    tools: dict[str, dict[str, Any]] = model_field(default_factory=dict)
+    """Configuration for tools."""
 
     __required__ = "api_key"
+
+    def _reload_tools(self):
+        loaded_tools: dict[str, dict[str, Any]] = {}
+
+        for key, value in self.tools.items():
+            if key.startswith("$"):
+                loaded_tools[key] = value
+                continue
+
+            tool_config = dict(value)
+            new_key = key
+
+            if key.startswith("~"):
+                new_key = key[1:]
+                if "$disable" not in tool_config or isinstance(
+                    tool_config["$disable"], bool
+                ):
+                    tool_config["$disable"] = True
+            elif key.startswith("?"):
+                new_key = key[1:]
+                tool_config["$optional"] = True
+
+            if key.startswith("::"):
+                new_key = new_key.replace("::", "miraita.providers.llm.tools.builtins.")
+
+            if tool_config.get("$disable") is True:
+                continue
+
+            loaded_tools[new_key] = tool_config
+
+        self.tools = loaded_tools
+
+    def __post_init__(self):
+        self._reload_tools()
 
 
 _conf = plugin_config(Config)
