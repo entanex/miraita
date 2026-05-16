@@ -1,12 +1,9 @@
-import time
 from typing import Any, Literal, TypeVar, overload
 
 import litellm
 from arclet.entari import add_service
 from launart import Launart, Service
 from launart.status import Phase
-
-from miraita.providers.prometheus import get_system_metrics  # entari: plugin
 
 from .tools.event import tools
 from ._callback import TokenUsageHandler
@@ -25,7 +22,11 @@ class LLMService(Service):
     def __init__(self):
         super().__init__()
         self.total_tokens = 0
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
         self.total_calls = 0
+        self.total_cost_usd = 0.0
+        self.total_function_calls = 0
         self.usage_handler = TokenUsageHandler(self)
 
     @property
@@ -197,18 +198,17 @@ class LLMService(Service):
         async with self.stage("preparing"):
             litellm.drop_params = True
             litellm.callbacks = [self.usage_handler]
-            self.start_time = time.time()
 
         async with self.stage("blocking"):
             await manager.status.wait_for_sigexit()
 
         async with self.stage("cleanup"):
-            uptime = get_system_metrics().uptime
             log(
                 "success",
-                f"运行统计: 耗时 [ {uptime} ] "
                 f"| 总请求 [ {self.total_calls} ] "
-                f"| 预估总 Token [ {self.total_tokens} ]",
+                f"| 预估总 Token [ {self.total_tokens} ] "
+                f"| Function Call [ {self.total_function_calls} ] "
+                f"| 预估花费 [ ${self.total_cost_usd:.6f} ]",
             )
 
 

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from dataclasses import dataclass
 
 from arclet.alconna import Namespace, config as alc_config
@@ -5,7 +6,10 @@ from arclet.entari import Image, MessageChain, Session, command, metadata
 from arclet.entari.const import ITEM_MESSAGE_REPLY
 from arclet.letoderea import Contexts
 
+from miraita.utils.reaction import with_reaction
+from miraita.providers.argot import Argot, on_argot
 from miraita.providers.llm import llm
+from miraita.providers.llm.metrics import collect_llm_call_stats
 
 
 metadata(
@@ -111,6 +115,7 @@ class Output:
 
 
 @command.command("zssm [...content]")
+@with_reaction
 async def _(content: command.Match[MessageChain], ctx: Contexts, session: Session):
     user_prompt = ""
     img_chain: MessageChain[Image] = MessageChain([])
@@ -148,4 +153,35 @@ async def _(content: command.Match[MessageChain], ctx: Contexts, session: Sessio
     keywords = response.output.keyword
     output = response.output.output
 
-    await session.send(f"关键词：{' | '.join(keywords)}\n\n{output}", reply_to=True)
+    result: MessageChain = MessageChain([f"关键词：{' | '.join(keywords)}\n\n{output}"])
+    if stats := collect_llm_call_stats(response):
+        result.append(
+            Argot(
+                "stats",
+                data=stats.to_dict(),
+                expired_at=timedelta(days=3),
+            )
+        )
+
+    await session.send(result)
+
+
+@on_argot("stats")
+async def _(argot: Argot, session: Session):
+    stats = argot.data
+    if not stats:
+        return
+
+    functions = stats.get("functions") or []
+    function_text = " | ".join(functions) if functions else "无"
+
+    await session.send(
+        "本次 LLM 调用统计\n"
+        f"模型: {stats.get('model', 'unknown')}\n"
+        f"Token: {stats.get('total_tokens', 0)} "
+        f"(输入 {stats.get('prompt_tokens', 0)} / "
+        f"输出 {stats.get('completion_tokens', 0)})\n"
+        f"预估花费: ${stats.get('cost_usd', 0):.6f}\n"
+        f"Function Call: {stats.get('function_calls', 0)}\n"
+        f"Tools: {function_text}"
+    )

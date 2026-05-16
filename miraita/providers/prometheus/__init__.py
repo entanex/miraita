@@ -4,6 +4,7 @@ from prometheus_client import (
     Gauge as Gauge,
     Histogram as Histogram,
     Summary as Summary,
+    REGISTRY as REGISTRY,
 )
 
 from arclet.entari import metadata, command, Session
