@@ -42,6 +42,8 @@ class Config(BasicConfModel):
     """Default prompt template"""
     enable_direct_message: bool = False
     """Whether to enable direct conversations in private messages"""
+    toolcall_max_steps: int = 8
+    """Maximum model call steps for resolving tool calls."""
     models: list[ScopedModel] = model_field(default_factory=list)
     """List of configured models with their individual settings"""
     tools: dict[str, dict[str, Any]] = model_field(default_factory=dict)

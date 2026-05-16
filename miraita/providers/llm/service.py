@@ -1,16 +1,20 @@
+import json
+from collections.abc import Awaitable, Callable
 from typing import Any, Literal, TypeVar, overload
 
 import litellm
 from arclet.entari import add_service
+from arclet.letoderea.context import generate_contexts
+from arclet.letoderea.exceptions import ExitState, _ExitException
 from launart import Launart, Service
 from launart.status import Phase
 
-from .tools.event import tools
 from ._callback import TokenUsageHandler
-from ._types import Message
-from .config import get_model_config
+from ._types import Message, ToolMessage
+from .config import _conf, get_model_config
 from .json_output import OutputType, StructuredModelResponse, parse_output
-from .log import log
+from .log import logger, log
+from .tools.event import LLMToolEvent, available_functions, tools
 
 
 TOutput = TypeVar("TOutput")
@@ -46,19 +50,60 @@ class LLMService(Service):
         **kwargs,
     ) -> dict:
         conf = get_model_config(model)
+        payload_messages = list(messages)
 
         if system or conf.prompt:
-            messages.insert(0, {"role": "system", "content": system or conf.prompt})
+            payload_messages.insert(
+                0, {"role": "system", "content": system or conf.prompt}
+            )
 
         return {
             "model": conf.name,
-            "messages": messages,
+            "messages": payload_messages,
             "stream": stream,
             "base_url": conf.base_url,
             "api_key": conf.api_key,
             **conf.extra,
             **kwargs,
         }
+
+    async def _handle_tool_call(
+        self,
+        tool_call: litellm.ChatCompletionMessageToolCall,
+    ) -> tuple[ToolMessage | None, bool]:
+        function_name = tool_call.function.name
+        if function_name is None:
+            return None, False
+
+        function_to_call = available_functions[function_name]
+        function_args = json.loads(tool_call.function.arguments)
+        ctx1 = await generate_contexts(LLMToolEvent())
+        logger.debug(f"Calling tool: {function_name} with args: {function_args}")
+
+        exit_loop = False
+        try:
+            resp = await function_to_call.handle(ctx1 | function_args, inner=True)
+            if isinstance(resp, ExitState):
+                if resp is ExitState.stop:
+                    return None, False
+                result = {"ok": True, "data": "已结束对话"}
+                exit_loop = True
+            elif isinstance(resp, _ExitException):
+                result = {"ok": True, "data": resp.args[0] if resp.args else None}
+                if len(resp.args) > 1 and resp.args[1]:
+                    exit_loop = True
+            else:
+                result = {"ok": True, "data": resp}
+        except Exception as e:
+            result = {"ok": False, "error": repr(e)}
+
+        tool_message: ToolMessage = {
+            "tool_call_id": tool_call.id,
+            "role": "tool",
+            "name": function_name,
+            "content": json.dumps(result, ensure_ascii=False),
+        }
+        return tool_message, exit_loop
 
     @overload
     async def generate(
@@ -69,6 +114,7 @@ class LLMService(Service):
         system: str | None = None,
         model: str | None = None,
         output: None = None,
+        on_message: Callable[[Message], Awaitable[None]] | None = None,
         **kwargs,
     ) -> litellm.ModelResponse: ...
 
@@ -81,6 +127,7 @@ class LLMService(Service):
         system: str | None = None,
         model: str | None = None,
         output: None = None,
+        on_message: Callable[[Message], Awaitable[None]] | None = None,
         **kwargs,
     ) -> litellm.CustomStreamWrapper: ...
 
@@ -93,6 +140,7 @@ class LLMService(Service):
         system: str | None = None,
         model: str | None = None,
         output: Literal["json_object"] | dict[str, Any],
+        on_message: Callable[[Message], Awaitable[None]] | None = None,
         **kwargs,
     ) -> StructuredModelResponse[Any]: ...
 
@@ -105,6 +153,7 @@ class LLMService(Service):
         system: str | None = None,
         model: str | None = None,
         output: type[TOutput],
+        on_message: Callable[[Message], Awaitable[None]] | None = None,
         **kwargs,
     ) -> StructuredModelResponse[TOutput]: ...
 
@@ -117,6 +166,7 @@ class LLMService(Service):
         system: str | None = None,
         model: str | None = None,
         output: OutputType | None = None,
+        on_message: Callable[[Message], Awaitable[None]] | None = None,
         **kwargs,
     ) -> litellm.ModelResponse | litellm.CustomStreamWrapper: ...
 
@@ -128,10 +178,13 @@ class LLMService(Service):
         system: str | None = None,
         model: str | None = None,
         output: OutputType | None = None,
+        on_message: Callable[[Message], Awaitable[None]] | None = None,
         **kwargs,
     ) -> litellm.ModelResponse | litellm.CustomStreamWrapper:
         if isinstance(message, str):
-            message = [{"role": "user", "content": message}]
+            messages: list[Message] = [{"role": "user", "content": message}]
+        else:
+            messages = message
 
         if output is not None and stream:
             raise ValueError("output is not supported when stream=True")
@@ -145,17 +198,64 @@ class LLMService(Service):
 
             kwargs["response_format"] = {"type": "json_object"}
 
-        payload = self._build_payload(
-            messages=message,
-            stream=stream,
-            system=system,
-            model=model,
-            tools=tools.copy(),
-            tool_choice="auto",
-            **kwargs,
-        )
+        steps = max(1, _conf.toolcall_max_steps)
+        for _ in range(steps):
+            payload = self._build_payload(
+                messages=messages,
+                stream=stream,
+                system=system,
+                model=model,
+                tools=tools.copy(),
+                tool_choice="auto",
+                **kwargs,
+            )
 
-        response = await litellm.acompletion(**payload)
+            response = await litellm.acompletion(**payload)
+            if isinstance(response, litellm.CustomStreamWrapper):
+                return response
+
+            response_message = response.choices[0].message
+            tool_calls = response_message.tool_calls
+            assistant_message: Message = {
+                "role": "assistant",
+                "content": response_message.content,
+            }
+            if tool_calls:
+                assistant_message["tool_calls"] = [tc.model_dump() for tc in tool_calls]
+
+            messages.append(assistant_message)
+            if on_message:
+                await on_message(assistant_message)
+
+            if not tool_calls:
+                break
+
+            exit_loop = False
+            calls = [
+                tc
+                for tc in tool_calls
+                if isinstance(tc, litellm.ChatCompletionMessageToolCall)
+            ]
+            for tool_call in calls:
+                tool_message, should_exit = await self._handle_tool_call(tool_call)
+                if tool_message:
+                    messages.append(tool_message)
+                    if on_message:
+                        await on_message(tool_message)
+                if should_exit:
+                    exit_loop = True
+                    break
+
+            if exit_loop:
+                response_message["content"] = "[END_OF_RESPONSE]"
+                response_message["tool_calls"] = None
+                break
+        else:
+            response = None
+            logger.warning("Tool call max steps reached without final response")
+
+        if response is None:
+            raise RuntimeError("LLM completion did not return a response")
 
         if output is not None:
             if isinstance(response, litellm.CustomStreamWrapper):

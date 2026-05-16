@@ -1,20 +1,16 @@
-import json
 from collections.abc import Sequence
 from typing import Any, overload
 from uuid import uuid4
 
 import litellm
 from arclet.entari import Image, MessageChain, Text
-from arclet.letoderea.exceptions import ExitState, _ExitException
-from arclet.letoderea.context import Contexts, generate_contexts
+from arclet.letoderea.context import Contexts
 from entari_plugin_user import User, UserSession
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select
 
 from miraita.providers.llm import llm, get_model_config
 from miraita.providers.llm._types import Message
-from miraita.providers.llm.tools.event import LLMToolEvent, available_functions
-from miraita.providers.llm.log import logger
 from miraita.providers.llm.model import LLMSession, SessionContext
 
 
@@ -136,18 +132,6 @@ class LLMSessionManager:
             await db_session.commit()
 
     @classmethod
-    async def _add_token_usage(cls, session_id: str, tokens: int) -> None:
-        if tokens <= 0:
-            return
-
-        async with get_db_session() as db_session:
-            user_session = await db_session.get(LLMSession, session_id)
-            if user_session is None:
-                return
-            user_session.total_tokens += tokens
-            await db_session.commit()
-
-    @classmethod
     async def _refresh_topic(
         cls,
         llm_session: LLMSession,
@@ -266,90 +250,20 @@ class LLMSessionManager:
         await cls._persist_message(llm_session.session_id, user_message)
 
         messages = await cls._load_messages(llm_session.session_id)
-        final_answer = ""
-        exit_loop = False
 
-        for _ in range(8):
-            response = await llm.generate(
-                messages,
-                stream=False,
-                model=model,
-                user=session.user.name,
-            )
+        async def on_message_callback(message: Message) -> None:
+            await cls._persist_message(llm_session.session_id, message)
 
-            usage = response.get("usage") or {}
-            await cls._add_token_usage(
-                llm_session.session_id,
-                int(usage.get("total_tokens", 0) or 0),
-            )
+        response = await llm.generate(
+            messages,
+            stream=False,
+            model=model,
+            user=session.user.name,
+            on_message=on_message_callback,
+        )
 
-            response_message = response["choices"][0]["message"]
-            tool_calls = response_message.tool_calls
-
-            assistant_message: Message = {
-                "role": "assistant",
-                "content": response_message.content,
-            }
-            if tool_calls:
-                assistant_message["tool_calls"] = [tc.model_dump() for tc in tool_calls]
-            messages.append(assistant_message)
-            await cls._persist_message(llm_session.session_id, assistant_message)
-
-            if tool_calls:
-                calls = [
-                    tc
-                    for tc in tool_calls
-                    if isinstance(tc, litellm.ChatCompletionMessageToolCall)
-                ]
-                for tool_call in calls:
-                    function_name = tool_call.function.name
-                    if function_name is None:
-                        continue
-
-                    function_to_call = available_functions[function_name]
-                    function_args = json.loads(tool_call.function.arguments)
-                    ctx1 = await generate_contexts(LLMToolEvent(), inherit_ctx=ctx)
-                    logger.debug(
-                        f"Calling tool: {function_name} with args: {function_args}"
-                    )
-                    try:
-                        resp = await function_to_call.handle(
-                            ctx1 | function_args, inner=True
-                        )
-                        if isinstance(resp, ExitState):
-                            if resp is ExitState.stop:
-                                continue
-                            result = {"ok": True, "data": "已结束对话"}
-                            exit_loop = True
-                        elif isinstance(resp, _ExitException):
-                            result: dict[str, Any] = {"ok": True, "data": resp.args[0]}
-                            if resp.args[1]:
-                                exit_loop = True
-                        else:
-                            result = {"ok": True, "data": resp}
-                    except Exception as e:
-                        result = {"ok": False, "error": repr(e)}
-
-                    tool_message: Message = {
-                        "tool_call_id": tool_call.id,
-                        "role": "tool",
-                        "name": function_name,
-                        "content": json.dumps(result, ensure_ascii=False),
-                    }
-                    messages.append(tool_message)
-                    await cls._persist_message(llm_session.session_id, tool_message)
-
-                    if exit_loop:
-                        break
-
-                if exit_loop:
-                    final_answer = "[END_OF_RESPONSE]"
-                    break
-                continue
-
-            final_answer = response_message.content or ""
-            break
-
+        response_message = response.choices[0].message
+        final_answer = response_message.content or ""
         if not final_answer:
             return "对话失败，请稍后再试"
         return final_answer
