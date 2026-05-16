@@ -127,7 +127,7 @@ async def _(content: command.Match[MessageChain], ctx: Contexts, session: Sessio
         user_prompt += f"<type: interest>{content.result}</type: interest>"
 
     if not user_prompt:
-        await session.send("请回复或输入内容", reply_to=True)
+        await session.send("请回复或输入内容")
 
     if reply and MessageChain(reply.origin.message).has(Image):
         img_chain.extend(MessageChain(reply.origin.message).include(Image))
@@ -143,11 +143,11 @@ async def _(content: command.Match[MessageChain], ctx: Contexts, session: Sessio
     response = await llm.generate(user_prompt, system=SYSTEM_PROMPT, output=Output)
 
     if response.output is None:
-        await session.send("解析失败, 请重试", reply_to=True)
+        await session.send("解析失败, 请重试")
         return
 
     if response.output.block:
-        await session.send("抱歉, 我现在还不会这个", reply_to=True)
+        await session.send("抱歉, 我现在还不会这个")
         return
 
     keywords = response.output.keyword
