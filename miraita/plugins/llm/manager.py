@@ -4,17 +4,18 @@ from typing import Any, overload
 from uuid import uuid4
 
 import litellm
+from arclet.entari import Image, MessageChain, Text
 from arclet.letoderea.exceptions import ExitState, _ExitException
 from arclet.letoderea.context import Contexts, generate_contexts
 from entari_plugin_user import User, UserSession
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import desc, func, select
 
+from miraita.providers.llm import llm, get_model_config
 from miraita.providers.llm._types import Message
 from miraita.providers.llm.tools.event import LLMToolEvent, available_functions, tools
 from miraita.providers.llm.log import logger
 from miraita.providers.llm.model import LLMSession, SessionContext
-from miraita.providers.llm.service import llm
 
 
 class LLMSessionManager:
@@ -90,6 +91,33 @@ class LLMSessionManager:
             )
             contexts = list((await db_session.scalars(stmt)).all())
         return [context.message for context in contexts]
+
+    @classmethod
+    async def _build_user_message(
+        cls,
+        message: MessageChain,
+        *,
+        session: UserSession,
+        model: str | None = None,
+    ) -> Message:
+        content = []
+        model = model or get_model_config().name
+
+        if message.has(Text):
+            content.append({"type": "text", "text": message.extract_plain_text()})
+
+        if message.has(Image) and litellm.supports_vision(model):
+            img_chain = message.include(Image)
+            for img in img_chain:
+                content.append({"type": "image_url", "image_url": {"url": img.src}})
+
+        user_message: Message = {
+            "role": "user",
+            "content": content,
+            "name": session.user.name,
+        }
+
+        return user_message
 
     @classmethod
     async def _persist_message(cls, session_id: str, message: Message) -> None:
@@ -212,26 +240,29 @@ class LLMSessionManager:
     @classmethod
     async def chat(
         cls,
-        user_input: str,
-        ctx: Contexts,
+        user_prompt: MessageChain,
+        *,
         session: UserSession,
+        ctx: Contexts,
         model: str | None = None,
         new: bool = False,
     ) -> str:
+        user_message = await cls._build_user_message(
+            user_prompt, session=session, model=model
+        )
         llm_session = await cls._get_active_session(session.user_id)
         if new or llm_session is None:
             llm_session = await cls._create_session(
-                user_id=session.user_id, user_input=user_input, model=model
+                user_id=session.user_id,
+                user_input=user_prompt.extract_plain_text(),
+                model=model,
             )
 
         if llm_session.topic == "新对话":
-            await cls._refresh_topic(llm_session, user_input=user_input, model=model)
+            await cls._refresh_topic(
+                llm_session, user_input=user_prompt.extract_plain_text(), model=model
+            )
 
-        user_message: Message = {
-            "role": "user",
-            "content": user_input,
-            "name": session.user.name,
-        }
         await cls._persist_message(llm_session.session_id, user_message)
 
         messages = await cls._load_messages(llm_session.session_id)

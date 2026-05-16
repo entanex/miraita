@@ -42,12 +42,11 @@ if _conf.enable_direct_message:
         if session.internal.event.sn in RECORD:
             return BLOCK
 
-        msg = session.internal.elements.extract_plain_text()
         try:
             answer = await LLMSessionManager.chat(
-                user_input=msg,
-                ctx=ctx,
+                session.elements,
                 session=session,
+                ctx=ctx,
             )
             if answer != "[END_OF_RESPONSE]":
                 await session.send(answer)

@@ -166,6 +166,33 @@ class LLMService(Service):
 
         return response
 
+    async def vision(
+        self,
+        image_url: str,
+        *,
+        system: str | None = None,
+        model: str | None = None,
+    ) -> litellm.ModelResponse:
+        image_payload = (
+            {"url": image_url} if isinstance(image_url, str) else image_url["image_url"]
+        )
+        message: list[Message] = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What’s in this image?"},
+                    {"type": "image_url", "image_url": image_payload},
+                ],
+            }
+        ]
+
+        conf = get_model_config(model)
+
+        if not litellm.supports_vision(conf.name):
+            raise RuntimeError(f"Model {conf.name} does not support vision input")
+
+        return await self.generate(message, system=system, model=conf.name)
+
     async def launch(self, manager: Launart):
         async with self.stage("preparing"):
             litellm.drop_params = True

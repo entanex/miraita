@@ -85,26 +85,27 @@ llm_disp = command.mount(llm_alc)
 async def _(
     ctx: Contexts,
     session: UserSession,
-    content: command.Match[tuple[str, ...]],
+    content: command.Match[MessageChain],
     new_opt: command.Query[bool] = command.Query("new_opt.value"),
     model_opt: command.Query[str] = command.Query("model_opt.model"),
 ):
-    reply = ctx.get(ITEM_MESSAGE_REPLY)
+    user_prompt = MessageChain([])
 
-    user_input = " ".join(content.result) if content.available else ""
+    if reply := ctx.get(ITEM_MESSAGE_REPLY):
+        user_prompt += reply.origin.message
 
-    if reply:
-        user_input = f"{user_input} {reply.origin.content}".strip()
+    if content.available:
+        user_prompt += content.result
 
-    if not user_input:
+    if not user_prompt:
         resp = await session.internal.prompt("需要我为你做些什么？")
         if not resp:
             return BLOCK
-        user_input = resp.extract_plain_text()
+        user_prompt = resp
 
     try:
         answer = await LLMSessionManager.chat(
-            user_input=user_input,
+            user_prompt,
             ctx=ctx,
             session=session,
             model=model_opt.result if model_opt.available else None,
