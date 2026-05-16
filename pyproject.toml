@@ -5,16 +5,15 @@ description = "基于 Entari 开发，超可爱的林汐酱"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "arclet-entari[full,pydantic]",
-    "entari-plugin-browser>=0.5.2",
-    "entari-plugin-database>=0.2.1",
-    "entari-plugin-server>=0.6.1",
+    "arclet-entari[full,pydantic]>=0.17.4",
+    "entari-plugin-browser>=0.5.4",
+    "entari-plugin-database>=0.2.4",
+    "entari-plugin-server>=0.7.0",
     "entari-plugin-user>=0.1.5",
     "fastapi>=0.116.1",
     "pillow>=11.3.0",
     "psutil>=7.0.0",
     "py-cpuinfo>=9.0.0",
-    "satori-python==1.3.2",
 ]
 
 [dependency-groups]
@@ -25,7 +24,7 @@ dev = [
     "rich>=14.1.0",
 ]
 adapters = [
-    "satori-python-adapter-milky>=0.3.1",
+    "satori-python-adapter-milky>=0.3.2",
     "satori-python-adapter-onebot11>=0.4.1",
     "satori-python-adapter-satori>=0.4.0",
 ]
@@ -40,8 +39,10 @@ sentry = [
     "sentry-sdk>=2.57.0",
 ]
 
-[tool.uv.sources]
-arclet-entari = { git = "https://github.com/ArcletProject/Entari.git" }
+[tool.uv]
+override-dependencies=[
+    "arclet-entari[full,pydantic]>=0.18.0rc1",
+]
 
 [tool.uv.build-backend]
 module-root = ""

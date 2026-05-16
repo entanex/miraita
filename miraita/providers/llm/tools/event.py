@@ -5,7 +5,7 @@ from arclet.entari import MessageCreatedEvent
 from arclet.entari.config.dc_schema import _MISSING, SchemaGenerator
 from arclet.letoderea import Subscriber, define
 from arclet.letoderea.provider import get_providers
-from arclet.letoderea.typing import Result
+from arclet.letoderea.utils import Result
 from docstring_parser import parse
 from tarina import Empty
 from tarina.generic import get_origin, origin_is_union
