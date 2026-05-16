@@ -684,7 +684,7 @@ wheels = [
 
 [[package]]
 name = "entari-plugin-browser"
-version = "0.5.4"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arclet-entari", extra = ["full", "pydantic"] },
@@ -692,9 +692,9 @@ dependencies = [
     { name = "graiax-text2img-playwright" },
     { name = "playwright" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ac/59/098f3e6b44b4fa1760a7e1895ac53270d0ad36501c06ed7ccb73f7f81d3a/entari_plugin_browser-0.5.4.tar.gz", hash = "sha256:82bbd6d36f934b0bbf8657ac808c11c9e5c7c64b3cd5507c2a638ca5aed45808", size = 16091, upload-time = "2026-03-04T01:22:08.874Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/52/39a86280e04ef339c16b8bf69e3de586cfd866f0105cfb0ab31ad5aaf103/entari_plugin_browser-0.6.0.tar.gz", hash = "sha256:6c8e4b7b706611e135805fdb9e46621bec99f62893b1bdc87e3ed767d084c83f", size = 16128, upload-time = "2026-05-16T13:03:57.367Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/9f/5d71ac7722ece2ce11dd43813618eaade57d5e114791019455610d577f83/entari_plugin_browser-0.5.4-py3-none-any.whl", hash = "sha256:37c96392edfff27296f5b6dbc9a9558b7745442070ec2544e9db1c3bb2702b05", size = 19651, upload-time = "2026-03-04T01:22:07.095Z" },
+    { url = "https://files.pythonhosted.org/packages/25/80/fb3525631e34d03a21cb9f790dad29ee69bcbf99b78db744aa5dbbe2d880/entari_plugin_browser-0.6.0-py3-none-any.whl", hash = "sha256:13b50a74604ede49704191ca5b042dc4a96657fe5eb617619679bbbe6c243d6d", size = 19649, upload-time = "2026-05-16T13:03:56.221Z" },
 ]
 
 [[package]]
@@ -1720,7 +1720,7 @@ sentry = [
 [package.metadata]
 requires-dist = [
     { name = "arclet-entari", extras = ["full", "pydantic"], specifier = ">=0.17.4" },
-    { name = "entari-plugin-browser", specifier = ">=0.5.4" },
+    { name = "entari-plugin-browser", specifier = ">=0.6.0" },
     { name = "entari-plugin-database", specifier = ">=0.2.4" },
     { name = "entari-plugin-server", specifier = ">=0.7.0" },
     { name = "entari-plugin-user", specifier = ">=0.1.5" },

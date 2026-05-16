@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "arclet-entari[full,pydantic]>=0.17.4",
-    "entari-plugin-browser>=0.5.4",
+    "entari-plugin-browser>=0.6.0",
     "entari-plugin-database>=0.2.4",
     "entari-plugin-server>=0.7.0",
     "entari-plugin-user>=0.1.5",
