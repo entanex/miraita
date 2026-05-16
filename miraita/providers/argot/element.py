@@ -28,7 +28,16 @@ class Argot(Element):
             self.expired_at = expired_at
 
         super().__init__()
-        self.__post_init__()
+
+    @classmethod
+    def unpack(cls, attrs: dict[str, Any]):
+        obj = cls(
+            name=attrs["name"],
+            data=attrs["data"],
+            expired_at=attrs.get("expired_at"),
+        )
+        obj._attrs.update(attrs)
+        return obj
 
 
 register_element(Argot)
