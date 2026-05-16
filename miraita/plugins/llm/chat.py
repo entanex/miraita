@@ -22,18 +22,6 @@ async def _record(event: SendResponse):
         RECORD.append(event.session.event.sn)
 
 
-@on(MessageCreatedEvent, priority=1000).if_(filter_.notice_me)
-@with_reaction
-async def run_conversation(session: UserSession, ctx: Contexts):
-    if session.internal.event.sn in RECORD:
-        return BLOCK
-
-    msg = session.internal.elements.extract_plain_text()
-    answer = await LLMSessionManager.chat(user_input=msg, ctx=ctx, session=session)
-    await session.send(answer)
-    return BLOCK
-
-
 @on(ConfigReload)
 async def reload_config(event: ConfigReload):
     if event.scope != "plugin":
@@ -43,3 +31,17 @@ async def reload_config(event: ConfigReload):
     new_conf = config_model_validate(Config, event.value)
     _conf.models = new_conf.models
     _conf.prompt = new_conf.prompt
+
+
+if _conf.enable_direct_message:
+
+    @on(MessageCreatedEvent, priority=1000).if_(filter_.direct_message)
+    @with_reaction
+    async def run_conversation(session: UserSession, ctx: Contexts):
+        if session.internal.event.sn in RECORD:
+            return BLOCK
+
+        msg = session.internal.elements.extract_plain_text()
+        answer = await LLMSessionManager.chat(user_input=msg, ctx=ctx, session=session)
+        await session.send(answer)
+        return BLOCK

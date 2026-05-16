@@ -40,6 +40,8 @@ class Config(BasicConfModel):
     """
     prompt: str = ""
     """Default prompt template"""
+    enable_direct_message: bool = False
+    """Whether to enable direct conversations in private messages"""
     models: list[ScopedModel] = model_field(default_factory=list)
     """List of configured models with their individual settings"""
 
