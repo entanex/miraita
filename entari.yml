@@ -83,6 +83,9 @@ plugins:
       redirect_uri: ${{ env.WAKA_REDIRECT_URI }}
       background_source: Lolicon
 
+    .plugins.at-command:
+      execute: llm
+
     .plugins.repeater:
       on_repeat:
         - min_times: 3

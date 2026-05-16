@@ -77,7 +77,7 @@ llm_alc = Alconna(
 
 llm_alc.shortcut("ai", {"command": "llm", "fuzzy": True, "prefix": True})
 
-llm_disp = command.mount(llm_alc)
+llm_disp = command.mount(llm_alc).as_execute()
 
 
 @llm_disp.handle(priority=25)

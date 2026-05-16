@@ -51,7 +51,7 @@ wakatime_alc = Alconna(
     namespace=ns,
 )
 wakatime_alc.shortcut("waka", {"command": "wakatime", "prefix": True})
-wakatime_disp = command.mount(wakatime_alc)
+wakatime_disp = command.mount(wakatime_alc).as_execute()
 
 
 @wakatime_disp.handle(priority=20)
