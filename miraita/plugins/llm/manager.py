@@ -13,7 +13,7 @@ from sqlalchemy import desc, func, select
 
 from miraita.providers.llm import llm, get_model_config
 from miraita.providers.llm._types import Message
-from miraita.providers.llm.tools.event import LLMToolEvent, available_functions, tools
+from miraita.providers.llm.tools.event import LLMToolEvent, available_functions
 from miraita.providers.llm.log import logger
 from miraita.providers.llm.model import LLMSession, SessionContext
 
@@ -274,8 +274,6 @@ class LLMSessionManager:
                 messages,
                 stream=False,
                 model=model,
-                tools=tools.copy(),
-                tool_choice="auto",
                 user=session.user.name,
             )
 

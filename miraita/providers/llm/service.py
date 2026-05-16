@@ -149,7 +149,7 @@ class LLMService(Service):
             stream=stream,
             system=system,
             model=model,
-            tools=tools,
+            tools=tools.copy(),
             tool_choice="auto",
             **kwargs,
         )
