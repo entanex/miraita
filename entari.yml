@@ -98,10 +98,13 @@ plugins:
       api_key: ${{ env.OPENAI_API_KEY }}
       base_url: https://api.openai.com/v1
       models:
-        - name: "deepseek/deepseek-chat"
+        - name: "gpt-5.5"
+          alias: "gpt"
+
+        - name: "deepseek/deepseek-v4-flash"
           api_key: ${{ env.DEEPSEEK_API_KEY }}
           base_url: https://api.deepseek.com
 
-        - name: "deepseek/deepseek-reasoner"
+        - name: "deepseek/deepseek-v4-pro"
           api_key: ${{ env.DEEPSEEK_API_KEY }}
           base_url: https://api.deepseek.com
