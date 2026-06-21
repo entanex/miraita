@@ -1,2 +1,1 @@
-from .user import User as User
-from .user import Bind as Bind
+from .monetary import Monetary as Monetary
