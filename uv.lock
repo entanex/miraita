@@ -1748,7 +1748,7 @@ requires-dist = [
     { name = "entari-plugin-server", specifier = ">=0.7.0" },
     { name = "entari-plugin-user", specifier = ">=0.1.5" },
     { name = "fastapi", specifier = ">=0.116.1" },
-    { name = "pillow", specifier = ">=11.3.0" },
+    { name = "pillow", specifier = ">=12.2.0" },
     { name = "psutil", specifier = ">=7.0.0" },
     { name = "py-cpuinfo", specifier = ">=9.0.0" },
 ]
