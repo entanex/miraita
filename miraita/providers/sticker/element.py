@@ -1,4 +1,3 @@
-from typing import Any
 from typing_extensions import override
 from dataclasses import dataclass, field
 
@@ -20,13 +19,13 @@ class Sticker(Image):
 
     def __init__(self, name: str, **kwargs):
         self.name = name
+        self._extra = kwargs.get("extra")
         super().__init__(src="", **kwargs)
-        self.__post_init__(kwargs.get("extra"))
+        self.__post_init__()
 
-    def __post_init__(self, extra: dict[str, Any] | None):
+    def __post_init__(self):
         self.src = self.source
         self.title = self.name
-        super().__post_init__(extra)
 
     @property
     @override

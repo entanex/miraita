@@ -63,6 +63,10 @@ plugins:
         token: ${{ env.MILKY_TOKEN }}
 
   miraita:
+    .plugins.checkin:
+      coin: [50, 100]
+      exp: 100
+      favor: [10, 20]
 
     .plugins.sentry:
       dsn: ${{ env.SENTRY_DSN }}
