@@ -116,7 +116,7 @@ class Output:
 
 @command.command("zssm [...content]")
 @with_reaction
-async def _(content: command.Match[MessageChain], ctx: Contexts, session: Session):
+async def zssm(content: command.Match[MessageChain], ctx: Contexts, session: Session):
     user_prompt = ""
     img_chain: MessageChain[Image] = MessageChain([])
 
@@ -171,7 +171,7 @@ async def _(content: command.Match[MessageChain], ctx: Contexts, session: Sessio
 
 
 @on_argot("stats")
-async def _(argot: Argot, session: Session):
+async def zssm_stats(argot: Argot, session: Session):
     stats = argot.data
     if not stats:
         return

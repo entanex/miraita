@@ -63,7 +63,7 @@ def _safe_extract(zf: zipfile.ZipFile, target_dir: Path) -> None:
     zf.extractall(target_dir)
 
 
-@on(Startup)
+@on(Startup, label="检查资源文件")
 async def check_resources(app: Entari, launart: Launart):
     try:
         is_empty = not any(RESOURCE_DIR.iterdir())

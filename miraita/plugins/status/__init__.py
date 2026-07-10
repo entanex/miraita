@@ -14,7 +14,7 @@ ns = Namespace("服务器状态")
 config.namespaces["服务器状态"] = ns
 
 
-status = Alconna(
+status_alc = Alconna(
     "status",
     meta=CommandMeta(
         description="查看服务器状态",
@@ -23,8 +23,9 @@ status = Alconna(
     ),
     namespace=ns,
 )
+status_disp = command.mount(status_alc).as_execute()
 
 
-@command.on(status)
-async def _(session: Session):
+@status_disp.handle()
+async def status(session: Session):
     await session.send([Image.of(raw=draw(), mime="image/png")])

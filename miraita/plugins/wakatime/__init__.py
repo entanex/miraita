@@ -56,7 +56,7 @@ wakatime_disp = command.mount(wakatime_alc).as_execute()
 
 @wakatime_disp.handle(priority=20)
 @with_reaction
-async def _(session: UserSession, target: command.Match[At | int]):
+async def wakatime(session: UserSession, target: command.Match[At | int]):
     target_name = "你"
     target_id = session.user_id
     if target.available:
@@ -120,7 +120,7 @@ async def _(session: UserSession, target: command.Match[At | int]):
 
 
 @wakatime_disp.assign("bind")
-async def _(
+async def bind(
     code: command.Match[str],
     session: UserSession,
     db_session: AsyncSession,
@@ -160,7 +160,7 @@ async def _(
 
 
 @wakatime_disp.assign("revoke")
-async def _(session: UserSession, db_session: AsyncSession):
+async def revoke(session: UserSession, db_session: AsyncSession):
     user = await db_session.get(User, session.user_id)
     if user is None:
         await session.send("你还没有绑定 WakaTime 账号")
@@ -185,7 +185,7 @@ async def _(session: UserSession, db_session: AsyncSession):
 
 
 @on_argot("background")
-async def _(session: Session, argot: Argot):
+async def background(session: Session, argot: Argot):
     if background := argot.data.get("background"):
         if isinstance(background, str):
             await session.send([Image.of(url=background)])

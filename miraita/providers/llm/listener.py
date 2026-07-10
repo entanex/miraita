@@ -6,7 +6,7 @@ from .config import _conf, get_model_id
 from ._jsondata import get_default_model, set_default_model
 
 
-@on(Ready)
+@on(Ready, label="检查默认模型配置")
 async def check():
     if not _conf.models:
         set_default_model(None)

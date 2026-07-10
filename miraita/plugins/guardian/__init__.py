@@ -86,7 +86,7 @@ guard = Alconna(
 
 
 @command.on(mute)
-async def _(session: UserSession, target: At | int, duration: int = 5):
+async def _mute(session: UserSession, target: At | int, duration: int = 5):
     if not session.internal.event.guild:
         await session.send("该操作只允许在群聊中使用")
         return
@@ -117,7 +117,7 @@ async def _(session: UserSession, target: At | int, duration: int = 5):
 
 
 @command.on(kick)
-async def _(
+async def _kick(
     session: UserSession,
     target: At | int,
     permanent: command.Query[bool] = command.Query("permanent.value"),
@@ -152,7 +152,7 @@ async def _(
 
 
 @command.on(withdraw)
-async def _(session: UserSession[MessageCreatedEvent]):
+async def _withdraw(session: UserSession[MessageCreatedEvent]):
     if not check_member_permission(session.member) and session.user.authority <= 3:
         await session.send("权限不足")
         return
@@ -170,7 +170,7 @@ async def _(session: UserSession[MessageCreatedEvent]):
 
 
 @command.on(guard)
-async def _(
+async def _guard(
     session: Session,
     events: command.Match[tuple[str, ...]],
     revoke: command.Query[bool] = command.Query("revoke.value"),

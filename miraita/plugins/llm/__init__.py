@@ -82,7 +82,7 @@ llm_disp = command.mount(llm_alc).as_execute()
 
 @llm_disp.handle(priority=25)
 @with_reaction
-async def _(
+async def llm_chat(
     ctx: Contexts,
     session: UserSession,
     content: command.Match[MessageChain],
@@ -122,14 +122,14 @@ async def _(
 
 
 @llm_disp.assign("new_cmd")
-async def _(session: UserSession):
+async def create_session(session: UserSession):
     new_session = await LLMSessionManager.create_new_session(session.user)
     await session.send(f"以创建并切换到新会话\n会话ID: {new_session.session_id}")
     return BLOCK
 
 
 @llm_disp.assign("switch")
-async def _(session: UserSession, session_id: command.Match[str]):
+async def switch_session(session: UserSession, session_id: command.Match[str]):
     if not session_id.available:
         selected = await select_session(session)
         if selected is None:
@@ -143,7 +143,7 @@ async def _(session: UserSession, session_id: command.Match[str]):
 
 
 @llm_disp.assign("delete")
-async def _(session: UserSession, session_id: command.Match[str]):
+async def delete_session(session: UserSession, session_id: command.Match[str]):
     if not session_id.available:
         selected = await select_session(session)
         if selected is None:
@@ -169,7 +169,7 @@ async def _(session: UserSession, session_id: command.Match[str]):
 
 
 @llm_disp.assign("session", priority=20)
-async def _(session: UserSession):
+async def session_info(session: UserSession):
     info = await LLMSessionManager.get_current_session_info(session.user)
     if info is None:
         await session.send("当前没有活动会话")
@@ -191,7 +191,7 @@ async def _(session: UserSession):
 
 
 @llm_disp.assign("session.list")
-async def _(session: UserSession):
+async def list_sessions(session: UserSession):
     rows = await LLMSessionManager.list_sessions(session.user)
 
     if not rows:
@@ -203,7 +203,7 @@ async def _(session: UserSession):
 
 
 @llm_disp.assign("model_cmd", priority=20)
-async def _(session: UserSession, model: command.Match[str]):
+async def model_cmd(session: UserSession, model: command.Match[str]):
     if model.available:
         if model.result not in get_model_list():
             await session.send(render_model_list())
@@ -221,6 +221,6 @@ async def _(session: UserSession, model: command.Match[str]):
 
 
 @llm_disp.assign("model_cmd.list")
-async def _(session: UserSession):
+async def list_models(session: UserSession):
     await session.send(render_model_list())
     return BLOCK

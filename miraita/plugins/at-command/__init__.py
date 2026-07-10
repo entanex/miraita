@@ -14,7 +14,11 @@ metadata(
 )
 
 
-@(on(MessageCreatedEvent, priority=1000).if_(filter_.public).if_(filter_.notice_me))
+@(
+    on(MessageCreatedEvent, priority=1000, label="At 指令")
+    .if_(filter_.public)
+    .if_(filter_.notice_me)
+)
 async def at_command(session: UserSession):
     if session.internal.elements:
         return

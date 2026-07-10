@@ -50,7 +50,7 @@ def _get_state(key: str) -> RepeatState:
     return _states.setdefault(key, RepeatState())
 
 
-@on(SendResponse)
+@on(SendResponse, label="记录机器人发送的消息")
 async def record_bot_message(event: SendResponse):
     if event.session is None:
         return
@@ -76,7 +76,7 @@ async def record_bot_message(event: SendResponse):
     update_repeated_state(_get_state(key), content)
 
 
-@on(MessageCreatedEvent, priority=20)
+@on(MessageCreatedEvent, priority=20, label="复读")
 async def handle_message(session: Session[MessageCreatedEvent]):
     if session.channel.type == ChannelType.DIRECT:
         return

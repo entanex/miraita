@@ -27,9 +27,9 @@ hitokoto_disp = command.mount(hitokoto_alc).as_execute()
 
 
 @hitokoto_disp.handle()
-async def _(session: UserSession):
+async def hitokoto(session: UserSession):
     hitokoto = await get_hitokoto()
     await session.send(
-        f"{hitokoto.hitokoto}\n——{hitokoto.from_}"
+        f"{hitokoto.hitokoto}\n—— {hitokoto.from_}"
         + (f"（{hitokoto.from_who}）" if hitokoto.from_who else " ")
     )

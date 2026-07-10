@@ -150,17 +150,17 @@ async def _update_receiver(session: UserSession, receive: bool):
 
 
 @feedback_disp.assign("receive")
-async def _(session: UserSession):
+async def receive(session: UserSession):
     return await _update_receiver(session, True)
 
 
 @feedback_disp.assign("unreceive")
-async def _(session: UserSession):
+async def unreceive(session: UserSession):
     return await _update_receiver(session, False)
 
 
 @feedback_disp.assign("$main")
-async def _(session: UserSession, message: command.Match[tuple[str, ...]]):
+async def feedback(session: UserSession, message: command.Match[tuple[str, ...]]):
     if not message.available:
         await session.send("请输入要反馈的内容")
         return BLOCK
@@ -215,7 +215,7 @@ async def _(session: UserSession, message: command.Match[tuple[str, ...]]):
     return BLOCK
 
 
-@on(MessageCreatedEvent, priority=20)
+@on(MessageCreatedEvent, priority=20, label="回复反馈")
 async def reply_feedback(session: Session[MessageCreatedEvent]):
     quote = session.event.quote
     if quote is None or quote.id is None:

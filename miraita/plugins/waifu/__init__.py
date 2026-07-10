@@ -31,7 +31,7 @@ waifu_disp = command.mount(waifu_alc)
 
 
 @waifu_disp.handle()
-async def _(session: UserSession):
+async def waifu(session: UserSession):
     if not session.internal.event.guild:
         await session.send("娶群友只允许在群聊中使用")
         return

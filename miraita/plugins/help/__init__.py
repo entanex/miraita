@@ -26,7 +26,7 @@ ns = Namespace("帮助")
 config.namespaces["帮助"] = ns
 
 
-help = Alconna(
+help_alc = Alconna(
     "help",
     Args["plugin?#插件名", str],
     meta=CommandMeta(
@@ -34,10 +34,11 @@ help = Alconna(
     ),
     namespace=ns,
 )
+help_disp = command.mount(help_alc).as_execute()
 
 
-@command.on(help)
-async def _(plugin: command.Match[str], session: Session):
+@help_disp.handle()
+async def help(plugin: command.Match[str], session: Session):
     async def send_command_help(namespace: str):
         all_commands = command_manager.get_commands(namespace)
         cmds = [cmd for cmd in all_commands if not cmd.meta.hide]

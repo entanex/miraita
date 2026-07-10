@@ -75,7 +75,7 @@ async def guild_member_request(session: Session[GuildMemberRequestEvent]):
 
 @on_argot("approve")
 @on_reaction(["124", "424"])
-async def _(argot: Argot, session: UserSession):
+async def approve_member(argot: Argot, session: UserSession):
     if isinstance(session.internal.event, ReactionAddedEvent):
         member = await session.internal.guild_member_get(session.platform_id)
     else:
@@ -94,7 +94,7 @@ async def _(argot: Argot, session: UserSession):
 
 @on_argot("refuse [comment:str]")
 @on_reaction(["123"])
-async def _(argot: Argot, session: UserSession, comment: str = ""):
+async def refuse_member(argot: Argot, session: UserSession, comment: str = ""):
     if isinstance(session.internal.event, ReactionAddedEvent):
         member = await session.internal.guild_member_get(session.platform_id)
     else:
