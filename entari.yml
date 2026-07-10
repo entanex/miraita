@@ -62,6 +62,15 @@ plugins:
         endpoint: "http://localhost:3010"
         token: ${{ env.MILKY_TOKEN }}
 
+      - $path: "@qq.websocket"
+        app_id: ${{ env.QQ_ID }}
+        secret: ${{ env.QQ_SECRET }}
+        token: ${{ env.QQ_TOKEN }}
+        intent:
+          guild_messages: true
+          at_messages: false
+          c2c_group_at_messages: true
+
   miraita:
     .plugins.checkin:
       coin: [50, 100]
