@@ -52,6 +52,8 @@ plugins:
     name: .miraita/miraita.db
     driver: aiosqlite
 
+  permission: {}
+
   server:
     host: 0.0.0.0
     port: 2310

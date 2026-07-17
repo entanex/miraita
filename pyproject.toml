@@ -9,6 +9,7 @@ dependencies = [
     "entari-plugin-browser>=0.6.1",
     "entari-plugin-database>=0.3.3",
     "entari-plugin-server>=0.7.3",
+    "entari-plugin-permission>=0.1.0",
     "entari-plugin-user>=0.1.5",
     "fastapi>=0.116.1",
     "pillow>=11.3.0",
