@@ -14,5 +14,4 @@ wheels/
 .miraita/
 miraita.db
 
-llonebot/
-QQ/
+llbot_config/
