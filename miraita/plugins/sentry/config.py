@@ -4,7 +4,7 @@ from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 
-class Config(BasicConfModel):
+class Config(BasicConfModel, extra="allow"):
     dsn: str | None = None
     environment: str = "prod"
     integrations: list[Integration] = model_field(
