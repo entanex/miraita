@@ -16,6 +16,8 @@ from satori.client.account import Account
 from satori.exception import ActionFailed, ServerException
 from entari_plugin_user import UserSession
 
+from miraita.utils.cooldown import interval
+
 from .log import logger
 from .config import Config, config
 from .data_source import (
@@ -160,6 +162,7 @@ async def unreceive(session: UserSession):
 
 
 @feedback_disp.assign("$main")
+@interval(600, limit_prompt="短时间内不可再次进行反馈 <sticker name='托腮' />")
 async def feedback(session: UserSession, message: command.Match[tuple[str, ...]]):
     if not message.available:
         await session.send("请输入要反馈的内容")
