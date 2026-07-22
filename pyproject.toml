@@ -25,7 +25,7 @@ dev = [
     "prek>=0.4.10",
 ]
 adapters = [
-    "satori-python-adapter-milky>=0.3.2",
+    "satori-python-adapter-milky>=0.5.1",
     "satori-python-adapter-onebot11>=0.4.2",
     "satori-python-adapter-qq>=0.3.3",
     "satori-python-adapter-satori>=0.4.0",
