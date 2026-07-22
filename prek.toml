@@ -26,3 +26,9 @@ hooks = [
     { id = "ruff-format", priority = 0 },
     { id = "ruff-check", args = ["--fix", "--exit-non-zero-on-fix"], types_or = ["python", "pyi"], require_serial = true, priority = 1 },
 ]
+
+[[repos]]
+repo = "local"
+hooks = [
+    { id = "uv-lock-check", name = "uv lock check", language = "system", entry = "uv lock --check", pass_filenames = false }
+]
