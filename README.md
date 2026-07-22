@@ -8,7 +8,6 @@ _✨ Here is Miraita - Multi-platform, multi-purpose. ✨_
 [![Release](https://github.com/entanex/miraita/actions/workflows/release.yml/badge.svg)](https://github.com/entanex/miraita/actions/workflows/release.yml)
 [![Pyright Lint](https://github.com/entanex/miraita/actions/workflows/pyright.yml/badge.svg)](https://github.com/entanex/miraita/actions/workflows/pyright.yml)
 [![Ruff Lint](https://github.com/entanex/miraita/actions/workflows/ruff.yml/badge.svg)](https://github.com/entanex/miraita/actions/workflows/ruff.yml)
-[![Pre-Commit](https://results.pre-commit.ci/badge/github/entanex/miraita/master.svg)](https://results.pre-commit.ci/latest/github/entanex/miraita/master)
 
 ## 简介 <img src="https://raw.githubusercontent.com/fenxer/llm-things/3eaaba79ddf48a784304493adfbaa614f410d6e6/images/human-coded.svg" width="90" />
 
@@ -42,5 +41,4 @@ _✨ Here is Miraita - Multi-platform, multi-purpose. ✨_
 
 ## 许可
 
-本项目使用 [GPL-3.0](./LICENSE) 许可证开业
-
+本项目使用 [GPL-3.0](./LICENSE) 许可证开源
