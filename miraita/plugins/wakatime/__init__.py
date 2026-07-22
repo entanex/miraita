@@ -85,18 +85,15 @@ async def wakatime(session: UserSession, target: command.Match[At | int]):
             get_background_image(),
         )
     except UserUnboundException:
-        await session.send(
+        return BLOCK.finish(
             f"{target_name}还没有绑定 WakaTime 账号，"
             "请私聊我并使用 /wakatime bind 进行绑定"
         )
-        return BLOCK
     except TimeoutError:
-        await session.send("网络超时，再试试叭")
-        return BLOCK
+        return BLOCK.finish("网络超时，再试试叭")
     except Exception:
         logger.exception("查询 WakaTime 数据失败")
-        await session.send("查询失败，请稍后重试")
-        return BLOCK
+        return BLOCK.finish("查询失败，请稍后重试")
 
     result = WakaTime(
         user=user_info,
@@ -108,15 +105,14 @@ async def wakatime(session: UserSession, target: command.Match[At | int]):
 
     data = await render_wakatime(result)
     if isinstance(data, str):
-        await session.send(data)
+        return BLOCK.finish(data)
     else:
-        await session.send(
+        return BLOCK.finish(
             [
                 Image.of(raw=data, mime="image/png"),
                 Argot("wakatime", data={"background": background_image}),
             ]
         )
-    return BLOCK
 
 
 @wakatime_disp.assign("bind")
@@ -126,25 +122,22 @@ async def bind(
     db_session: AsyncSession,
 ):
     if session.channel_type != ChannelType.DIRECT:
-        await session.send("绑定指令只允许在私聊中使用")
-        return BLOCK
+        return BLOCK.finish("绑定指令只允许在私聊中使用")
 
     bound = await db_session.get(User, session.user_id)
     if bound is not None:
-        await session.send("已绑定过 WakaTime 账号")
-        return BLOCK
+        return BLOCK.finish("已绑定过 WakaTime 账号")
 
     if not code.available:
         state = create_state(session.user.id)
         auth_url = build_authorize_url(state)
         if is_mountable():
-            await session.send(f"前往该页面绑定 WakaTime 账号：{auth_url}\n")
+            return BLOCK.finish(f"前往该页面绑定 WakaTime 账号：{auth_url}\n")
         else:
-            await session.send(
+            return BLOCK.finish(
                 f"前往该页面绑定 WakaTime 账号：{auth_url}\n"
                 "完成后请使用 /wakatime bind <code> 提交授权码。"
             )
-        return BLOCK
 
     try:
         access_token = await API.bind_user(code.result)
@@ -152,36 +145,32 @@ async def bind(
         db_session.add(User(id=session.user.id, access_token=access_token))
         await db_session.commit()
 
-        await session.send("绑定成功")
+        return BLOCK.finish("绑定成功")
     except BindUserException:
         logger.exception(f"用户 {session.user.id} 绑定失败")
-        await session.send("绑定失败，请检查 code 是否正确")
-    return BLOCK
+        return BLOCK.finish("绑定失败，请检查 code 是否正确")
 
 
 @wakatime_disp.assign("revoke")
 async def revoke(session: UserSession, db_session: AsyncSession):
     user = await db_session.get(User, session.user_id)
     if user is None:
-        await session.send("你还没有绑定 WakaTime 账号")
-        return BLOCK
+        return BLOCK.finish("你还没有绑定 WakaTime 账号")
 
     try:
         status_code = await API.revoke_user_token(session.user_id)
         if status_code != 200:
             logger.error(f"用户 {session.user.id} 解绑失败。状态码：{status_code}")
-            await session.send("解绑失败")
-            return BLOCK
+            return BLOCK.finish("解绑失败")
 
         user = await db_session.get(User, session.user.id)
         if user is not None:
             await db_session.delete(user)
             await db_session.commit()
-        await session.send("已解绑")
+        return BLOCK.finish("已解绑")
     except Exception:
         logger.exception(f"用户 {session.user.id} 解绑失败")
-        await session.send("解绑失败")
-    return BLOCK
+        return BLOCK.finish("解绑失败")
 
 
 @on_argot("background")
