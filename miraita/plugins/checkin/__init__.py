@@ -8,7 +8,7 @@ from entari_plugin_user import UserSession
 
 from miraita.utils.cooldown import interval
 from miraita.providers.monetary import monetary
-from miraita.plugins.hitokoto import get_hitokoto  # entari:plugin
+from miraita.plugins.hitokoto import get_hitokoto
 
 from .config import config, Config
 

@@ -30,6 +30,8 @@ hitokoto_disp = command.mount(hitokoto_alc).as_execute()
 async def hitokoto(session: UserSession):
     hitokoto = await get_hitokoto()
     await session.send(
-        f"{hitokoto.hitokoto}\n—— {hitokoto.from_}"
-        + (f"（{hitokoto.from_who}）" if hitokoto.from_who else " ")
+        f"今日一言：<i>{hitokoto.hitokoto}</i>\n"
+        f"—— {hitokoto.from_}"
+        f"{f'（{hitokoto.from_who}）' if hitokoto.from_who else ''}"
+        f"<button type='input' text='/一言'>再来一条</button>"
     )

@@ -87,7 +87,7 @@ async def wakatime(session: UserSession, target: command.Match[At | int]):
     except UserUnboundException:
         return BLOCK.finish(
             f"{target_name}还没有绑定 WakaTime 账号，"
-            "请私聊我并使用 /wakatime bind 进行绑定"
+            "请私聊我并使用 <code>/wakatime bind</code> 进行绑定"
         )
     except TimeoutError:
         return BLOCK.finish("网络超时，再试试叭")
@@ -126,7 +126,12 @@ async def bind(
 
     bound = await db_session.get(User, session.user_id)
     if bound is not None:
-        return BLOCK.finish("已绑定过 WakaTime 账号")
+        return BLOCK.finish(
+            (
+                "已绑定过 WakaTime 账号",
+                "<button type='input' text='/waka'>查询</button>",
+            )
+        )
 
     if not code.available:
         state = create_state(session.user.id)
@@ -136,7 +141,7 @@ async def bind(
         else:
             return BLOCK.finish(
                 f"前往该页面绑定 WakaTime 账号：{auth_url}\n"
-                "完成后请使用 /wakatime bind <code> 提交授权码。"
+                "完成后请使用 <code>/wakatime bind「code」</code> 提交授权码。"
             )
 
     try:
@@ -145,7 +150,7 @@ async def bind(
         db_session.add(User(id=session.user.id, access_token=access_token))
         await db_session.commit()
 
-        return BLOCK.finish("绑定成功")
+        return BLOCK.finish("绑定成功 <button type='input' text='/waka'>查询</button>")
     except BindUserException:
         logger.exception(f"用户 {session.user.id} 绑定失败")
         return BLOCK.finish("绑定失败，请检查 code 是否正确")
@@ -155,7 +160,12 @@ async def bind(
 async def revoke(session: UserSession, db_session: AsyncSession):
     user = await db_session.get(User, session.user_id)
     if user is None:
-        return BLOCK.finish("你还没有绑定 WakaTime 账号")
+        return BLOCK.finish(
+            (
+                "你还没有绑定 WakaTime 账号",
+                "<button type='input' text='/waka bind'>即刻绑定</button>",
+            )
+        )
 
     try:
         status_code = await API.revoke_user_token(session.user_id)

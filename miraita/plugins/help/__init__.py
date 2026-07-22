@@ -51,13 +51,17 @@ async def help(plugin: command.Match[str], session: Session):
             formatter.add(cmd)
         md_help = formatter.format_node()
 
-        md_image = await md2img(md_help, screenshot_option={"timeout": 60000})
-        if md_image is None:
-            logger.warning("md2img 生成图片失败，尝试发送文本帮助")
-            await session.send("\n\n".join(cmd.get_help() for cmd in cmds))
-            return
+        if session.account.platform in ["onebot", "milky", "llonebot"]:
+            md_image = await md2img(md_help, screenshot_option={"timeout": 60000})
+            if md_image is None:
+                logger.warning("md2img 生成图片失败，尝试发送文本帮助")
+                await session.send("\n\n".join(cmd.get_help() for cmd in cmds))
+                return
 
-        await session.send([Image.of(raw=md_image, mime="image/png")])
+            await session.send([Image.of(raw=md_image, mime="image/png")])
+
+        else:
+            await session.send("<markdown>\n" + md_help + "\n</markdown>")
 
     if plugin.available:
         await send_command_help(plugin.result)
