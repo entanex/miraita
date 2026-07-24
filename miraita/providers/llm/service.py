@@ -1,37 +1,39 @@
-import json
-from collections.abc import Awaitable, Callable
+import time
 from typing import Any, Literal, TypeVar, overload
 
 import litellm
-from arclet.entari import add_service
-from arclet.letoderea.context import generate_contexts
-from arclet.letoderea.exceptions import ExitState, _ExitException
+from agno.agent import Agent
+from agno.db.sqlite import AsyncSqliteDb
+from agno.models.litellm import LiteLLM
+from agno.models.message import Message
+from agno.run.base import RunStatus
+from arclet.entari import add_service, local_data
 from launart import Launart, Service
 from launart.status import Phase
 
 from ._callback import TokenUsageHandler
-from ._types import Message, ToolMessage
 from .config import _conf, get_model_config
-from .json_output import OutputType, StructuredModelResponse, parse_output
-from .log import logger, log
-from .tools.event import LLMToolEvent, available_functions, tools
-
+from .response import GenericResponse, prepare_output_schema
+from .metrics import record_llm_message_stats
+from .session import AgnoSessionStore, SessionInfo
+from .stats import collect_message_stats
+from .tools.bridge import get_agno_tools
 
 TOutput = TypeVar("TOutput")
+OutputType = Literal["json_object"] | type[Any] | dict[str, Any]
 
 
 class LLMService(Service):
     id = "entari_plugin_llm"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.total_tokens = 0
-        self.prompt_tokens = 0
-        self.completion_tokens = 0
         self.total_calls = 0
-        self.total_cost_usd = 0.0
-        self.total_function_calls = 0
+        self.start_time: float = 0.0
         self.usage_handler = TokenUsageHandler(self)
+        self._db: AsyncSqliteDb | None = None
+        self._sessions: AgnoSessionStore | None = None
 
     @property
     def required(self) -> set[str]:
@@ -41,277 +43,224 @@ class LLMService(Service):
     def stages(self) -> set[Phase]:
         return {"preparing", "blocking", "cleanup"}
 
-    def _build_payload(
-        self,
-        messages: list[Message],
-        stream: bool,
-        system: str | None = None,
-        model: str | None = None,
-        **kwargs,
-    ) -> dict:
-        conf = get_model_config(model)
-        payload_messages = list(messages)
-
-        if system or conf.prompt:
-            payload_messages.insert(
-                0, {"role": "system", "content": system or conf.prompt}
-            )
-
-        return {
-            "model": conf.name,
-            "messages": payload_messages,
-            "stream": stream,
-            "base_url": conf.base_url,
-            "api_key": conf.api_key,
-            **conf.extra,
-            **kwargs,
-        }
-
-    async def _handle_tool_call(
-        self,
-        tool_call: litellm.ChatCompletionMessageToolCall,
-    ) -> tuple[ToolMessage | None, bool]:
-        function_name = tool_call.function.name
-        if function_name is None:
-            return None, False
-
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(tool_call.function.arguments)
-        ctx1 = await generate_contexts(LLMToolEvent())
-        logger.debug(f"Calling tool: {function_name} with args: {function_args}")
-
-        exit_loop = False
-        try:
-            resp = await function_to_call.handle(ctx1 | function_args, inner=True)
-            if isinstance(resp, ExitState):
-                if resp is ExitState.stop:
-                    return None, False
-                result = {"ok": True, "data": "已结束对话"}
-                exit_loop = True
-            elif isinstance(resp, _ExitException):
-                result = {"ok": True, "data": resp.args[0] if resp.args else None}
-                if len(resp.args) > 1 and resp.args[1]:
-                    exit_loop = True
-            else:
-                result = {"ok": True, "data": resp}
-        except Exception as e:
-            result = {"ok": False, "error": repr(e)}
-
-        tool_message: ToolMessage = {
-            "tool_call_id": tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": json.dumps(result, ensure_ascii=False),
-        }
-        return tool_message, exit_loop
+    @property
+    def session_store(self) -> AgnoSessionStore:
+        if self._sessions is None:
+            raise RuntimeError("Agno session store is not initialized")
+        return self._sessions
 
     @overload
     async def generate(
         self,
         message: str | list[Message],
+        variables: dict[str, Any] | None = None,
         *,
-        stream: Literal[False] = False,
-        system: str | None = None,
-        model: str | None = None,
-        output: None = None,
-        on_message: Callable[[Message], Awaitable[None]] | None = None,
-        **kwargs,
-    ) -> litellm.ModelResponse: ...
-
-    @overload
-    async def generate(
-        self,
-        message: str | list[Message],
-        *,
-        stream: Literal[True],
-        system: str | None = None,
-        model: str | None = None,
-        output: None = None,
-        on_message: Callable[[Message], Awaitable[None]] | None = None,
-        **kwargs,
-    ) -> litellm.CustomStreamWrapper: ...
-
-    @overload
-    async def generate(
-        self,
-        message: str | list[Message],
-        *,
-        stream: Literal[False] = False,
-        system: str | None = None,
-        model: str | None = None,
-        output: Literal["json_object"] | dict[str, Any],
-        on_message: Callable[[Message], Awaitable[None]] | None = None,
-        **kwargs,
-    ) -> StructuredModelResponse[Any]: ...
-
-    @overload
-    async def generate(
-        self,
-        message: str | list[Message],
-        *,
-        stream: Literal[False] = False,
+        stream: bool = False,
         system: str | None = None,
         model: str | None = None,
         output: type[TOutput],
-        on_message: Callable[[Message], Awaitable[None]] | None = None,
-        **kwargs,
-    ) -> StructuredModelResponse[TOutput]: ...
+        ignore_user_prompt: bool = False,
+        **kwargs: Any,
+    ) -> GenericResponse[TOutput]: ...
 
     @overload
     async def generate(
         self,
         message: str | list[Message],
+        variables: dict[str, Any] | None = None,
         *,
-        stream: bool,
+        stream: bool = False,
         system: str | None = None,
         model: str | None = None,
-        output: OutputType | None = None,
-        on_message: Callable[[Message], Awaitable[None]] | None = None,
-        **kwargs,
-    ) -> litellm.ModelResponse | litellm.CustomStreamWrapper: ...
+        output: Literal["json_object"] | dict[str, Any],
+        ignore_user_prompt: bool = False,
+        **kwargs: Any,
+    ) -> GenericResponse[Any]: ...
+
+    @overload
+    async def generate(
+        self,
+        message: str | list[Message],
+        variables: dict[str, Any] | None = None,
+        *,
+        stream: bool = False,
+        system: str | None = None,
+        model: str | None = None,
+        output: None = None,
+        ignore_user_prompt: bool = False,
+        **kwargs: Any,
+    ) -> GenericResponse[None]: ...
 
     async def generate(
         self,
         message: str | list[Message],
+        variables: dict[str, Any] | None = None,
         *,
         stream: bool = False,
         system: str | None = None,
         model: str | None = None,
         output: OutputType | None = None,
-        on_message: Callable[[Message], Awaitable[None]] | None = None,
-        **kwargs,
-    ) -> litellm.ModelResponse | litellm.CustomStreamWrapper:
-        if isinstance(message, str):
-            messages: list[Message] = [{"role": "user", "content": message}]
-        else:
-            messages = message
+        ignore_user_prompt: bool = False,
+        **kwargs: Any,
+    ) -> GenericResponse[Any]:
+        """Generate a stateless LLM response through an Agno Agent."""
+        return await self._run_agent(
+            message,
+            variables,
+            stream=stream,
+            system=system,
+            model=model,
+            output=output,
+            session=None,
+            ignore_user_prompt=ignore_user_prompt,
+            request_params=kwargs,
+        )
 
-        if output is not None and stream:
+    async def _generate_for_session(
+        self,
+        message: str | list[Message],
+        variables: dict[str, Any] | None = None,
+        *,
+        session: SessionInfo,
+        model: str | None = None,
+    ) -> GenericResponse[None]:
+        """Generate a persisted response for Entari's chat session manager."""
+        return await self._run_agent(
+            message,
+            variables,
+            stream=False,
+            system=None,
+            model=model,
+            output=None,
+            session=session,
+            ignore_user_prompt=False,
+            request_params={},
+        )
+
+    async def _run_agent(
+        self,
+        message: str | list[Message],
+        variables: dict[str, Any] | None,
+        *,
+        stream: bool,
+        system: str | None,
+        model: str | None,
+        output: OutputType | None,
+        session: SessionInfo | None,
+        ignore_user_prompt: bool,
+        request_params: dict[str, Any],
+    ) -> GenericResponse[Any]:
+        output_schema, output_adapter = prepare_output_schema(output)
+        if output_schema is not None and stream:
             raise ValueError("output is not supported when stream=True")
 
-        if output is not None:
-            json_system_hint = (
-                "Return valid JSON only. "
-                "Do not include markdown code fences or any additional explanation."
-            )
-            system = f"{system}\n\n{json_system_hint}" if system else json_system_hint
-
-            kwargs["response_format"] = {"type": "json_object"}
-
-        steps = max(1, _conf.toolcall_max_steps)
-        for _ in range(steps):
-            payload = self._build_payload(
-                messages=messages,
-                stream=stream,
-                system=system,
-                model=model,
-                tools=tools.copy(),
-                tool_choice="auto",
-                **kwargs,
-            )
-
-            response = await litellm.acompletion(**payload)
-            if isinstance(response, litellm.CustomStreamWrapper):
-                return response
-
-            response_message = response.choices[0].message
-            tool_calls = response_message.tool_calls
-            assistant_message: Message = {
-                "role": "assistant",
-                "content": response_message.content,
-            }
-            if tool_calls:
-                assistant_message["tool_calls"] = [tc.model_dump() for tc in tool_calls]
-
-            messages.append(assistant_message)
-            if on_message:
-                await on_message(assistant_message)
-
-            if not tool_calls:
-                break
-
-            exit_loop = False
-            calls = [
-                tc
-                for tc in tool_calls
-                if isinstance(tc, litellm.ChatCompletionMessageToolCall)
-            ]
-            for tool_call in calls:
-                tool_message, should_exit = await self._handle_tool_call(tool_call)
-                if tool_message:
-                    messages.append(tool_message)
-                    if on_message:
-                        await on_message(tool_message)
-                if should_exit:
-                    exit_loop = True
-                    break
-
-            if exit_loop:
-                response_message["content"] = "[END_OF_RESPONSE]"
-                response_message["tool_calls"] = None
-                break
+        model_config = get_model_config(model)
+        if system is not None:
+            instructions = system
+        elif ignore_user_prompt:
+            instructions = None
         else:
-            response = None
-            logger.warning("Tool call max steps reached without final response")
+            instructions = model_config.prompt or _conf.prompt or None
 
-        if response is None:
-            raise RuntimeError("LLM completion did not return a response")
+        if variables:
+            variable_instructions = "下列是用以辅助你思考回答的变量：\n" + "\n".join(
+                f"- **{key}**: {value!r}" for key, value in variables.items()
+            )
+            instructions = (
+                f"{instructions}\n\n{variable_instructions}"
+                if instructions
+                else variable_instructions
+            )
 
-        if output is not None:
-            if isinstance(response, litellm.CustomStreamWrapper):
-                raise ValueError("output is not supported when stream=True")
+        model_request_params = {**model_config.extra, **request_params}
+        agno_model = LiteLLM(
+            id=model_config.name,
+            api_key=model_config.api_key,
+            api_base=model_config.base_url,
+            request_params=model_request_params or None,
+        )
 
-            content = response.choices[0].message.content
-            parsed = parse_output(content, output)
-            return StructuredModelResponse.from_model_response(response, parsed)
+        agent_kwargs: dict[str, Any] = {
+            "id": self.id,
+            "model": agno_model,
+            "instructions": instructions,
+            "tools": get_agno_tools(),
+            "markdown": False,
+        }
+        if output_schema is not None:
+            agent_kwargs["output_schema"] = output_schema
+            agent_kwargs["use_json_mode"] = True
+        if session is not None:
+            if self._db is not None:
+                agent_kwargs["db"] = self._db
+            agent_kwargs["session_id"] = session.session_id
+            agent_kwargs["user_id"] = session.user_id
+            agent_kwargs["add_history_to_context"] = True
+            agent_kwargs["enable_session_summaries"] = True
+            agent_kwargs["add_session_summary_to_context"] = False
 
-        return response
+        agent = Agent(**agent_kwargs)
+        if stream:
+            return GenericResponse.from_stream(agent.arun(message, stream=True))
+
+        result = await agent.arun(message)
+        if result.status is RunStatus.error:
+            raise RuntimeError(str(result.content or "Agno agent run failed"))
+
+        record_llm_message_stats(
+            str(result.model or model_config.name),
+            collect_message_stats(result.messages),
+        )
+
+        return GenericResponse.from_run_output(
+            result,
+            structured=output_schema is not None,
+            output_adapter=output_adapter,
+        )
 
     async def vision(
         self,
-        image_url: str,
-        *,
+        image_url: str | dict[str, Any],
         system: str | None = None,
         model: str | None = None,
-    ) -> litellm.ModelResponse:
-        image_payload = (
-            {"url": image_url} if isinstance(image_url, str) else image_url["image_url"]
+    ) -> GenericResponse[None]:
+        """Describe an image through the standard generate path."""
+        model_config = get_model_config(model)
+        if not litellm.supports_vision(model_config.name):
+            raise RuntimeError(
+                f"Model {model_config.name} does not support vision input"
+            )
+
+        if isinstance(image_url, str):
+            url = image_url
+        else:
+            image = image_url.get("image_url", image_url)
+            url = image["url"] if isinstance(image, dict) else str(image)
+        message = Message(
+            role="user",
+            content=[
+                {"type": "text", "text": "Describe this image."},
+                {"type": "image_url", "image_url": {"url": url}},
+            ],
         )
-        message: list[Message] = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "What’s in this image?"},
-                    {"type": "image_url", "image_url": image_payload},
-                ],
-            }
-        ]
+        return await self.generate([message], system=system, model=model_config.name)
 
-        conf = get_model_config(model)
-
-        if not litellm.supports_vision(conf.name):
-            raise RuntimeError(f"Model {conf.name} does not support vision input")
-
-        return await self.generate(message, system=system, model=conf.name)
-
-    async def launch(self, manager: Launart):
+    async def launch(self, manager: Launart) -> None:
         async with self.stage("preparing"):
             litellm.drop_params = True
             litellm.callbacks = [self.usage_handler]
+            self.start_time = time.time()
+            db_path = local_data.get_data_file("llm", "agno.db")
+            self._db = AsyncSqliteDb(db_file=str(db_path))
+            self._sessions = AgnoSessionStore(self._db, self.id)
 
         async with self.stage("blocking"):
             await manager.status.wait_for_sigexit()
 
         async with self.stage("cleanup"):
-            log(
-                "success",
-                f"| 总请求 [ {self.total_calls} ] "
-                f"| 预估总 Token [ {self.total_tokens} ] "
-                f"| Function Call [ {self.total_function_calls} ] "
-                f"| 预估花费 [ ${self.total_cost_usd:.6f} ]",
-            )
+            if self._db is not None:
+                await self._db.db_engine.dispose()
 
 
 llm = LLMService()
-
 add_service(llm)

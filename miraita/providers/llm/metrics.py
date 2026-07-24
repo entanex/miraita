@@ -1,10 +1,12 @@
-from typing import Any
 from dataclasses import asdict, dataclass
+from typing import Any
 
 import litellm
 from arclet.entari import keeping
 
 from miraita.providers.prometheus import Counter, REGISTRY
+
+from .stats import MessageStats, TokenStats, collect_cost, collect_token_stats
 
 
 def _get_value(obj: Any, key: str, default: Any = None) -> Any:
@@ -13,16 +15,12 @@ def _get_value(obj: Any, key: str, default: Any = None) -> Any:
     return getattr(obj, key, default)
 
 
-def _get_usage(response_obj: Any) -> dict[str, int]:
+def _get_usage(response_obj: Any) -> TokenStats:
+    metrics = _get_value(response_obj, "metrics")
+    if metrics is not None:
+        return collect_token_stats(metrics)
     usage = _get_value(response_obj, "usage") or {}
-    prompt_tokens = int(_get_value(usage, "prompt_tokens", 0) or 0)
-    completion_tokens = int(_get_value(usage, "completion_tokens", 0) or 0)
-    total_tokens = int(_get_value(usage, "total_tokens", 0) or 0)
-    return {
-        "prompt_tokens": prompt_tokens,
-        "completion_tokens": completion_tokens,
-        "total_tokens": total_tokens or prompt_tokens + completion_tokens,
-    }
+    return collect_token_stats(usage)
 
 
 def _get_model(kwargs: Any, response_obj: Any) -> str:
@@ -32,8 +30,16 @@ def _get_model(kwargs: Any, response_obj: Any) -> str:
 
 def _iter_tool_calls(response_obj: Any):
     choices = _get_value(response_obj, "choices", []) or []
-    for choice in choices:
-        message = _get_value(choice, "message") or {}
+    if choices:
+        for choice in choices:
+            message = _get_value(choice, "message") or {}
+            tool_calls = _get_value(message, "tool_calls", []) or []
+            yield from tool_calls
+        return
+
+    for message in _get_value(response_obj, "messages", []) or []:
+        if _get_value(message, "from_history", False):
+            continue
         tool_calls = _get_value(message, "tool_calls", []) or []
         yield from tool_calls
 
@@ -45,6 +51,14 @@ def _get_function_name(tool_call: Any) -> str:
 
 
 def _calculate_cost(response_obj: Any, model: str) -> float:
+    metrics = _get_value(response_obj, "metrics")
+    usage = _get_value(response_obj, "usage") or {}
+    hidden_params = _get_value(response_obj, "_hidden_params") or {}
+    for source in (metrics, usage, hidden_params, response_obj):
+        cost = collect_cost(source)
+        if cost:
+            return cost
+
     try:
         return float(
             litellm.completion_cost(
@@ -57,12 +71,10 @@ def _calculate_cost(response_obj: Any, model: str) -> float:
         return 0.0
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class LLMCallStats:
     model: str
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
+    tokens: TokenStats
     cost_usd: float
     function_calls: int
     functions: list[str]
@@ -74,21 +86,14 @@ class LLMCallStats:
 def collect_llm_call_stats(
     response_obj: Any,
     kwargs: Any | None = None,
-) -> LLMCallStats | None:
-    usage = _get_usage(response_obj)
-    if usage["total_tokens"] <= 0:
-        return None
-
+) -> LLMCallStats:
     model = _get_model(kwargs or {}, response_obj)
     functions = [
         _get_function_name(tool_call) for tool_call in _iter_tool_calls(response_obj)
     ]
-
     return LLMCallStats(
         model=model,
-        prompt_tokens=usage["prompt_tokens"],
-        completion_tokens=usage["completion_tokens"],
-        total_tokens=usage["total_tokens"],
+        tokens=_get_usage(response_obj),
         cost_usd=_calculate_cost(response_obj, model),
         function_calls=len(functions),
         functions=functions,
@@ -101,6 +106,16 @@ llm_call_counter = keeping(
         "miraita_llm_calls",
         "Total number of LLM calls",
         ["model"],
+    ),
+    dispose=lambda counter: REGISTRY.unregister(counter),
+)
+
+llm_message_counter = keeping(
+    "llm_message_counter",
+    obj_factory=lambda: Counter(
+        "miraita_llm_messages",
+        "Total number of LLM session messages",
+        ["model", "message_type"],
     ),
     dispose=lambda counter: REGISTRY.unregister(counter),
 )
@@ -134,3 +149,27 @@ llm_function_call_counter = keeping(
     ),
     dispose=lambda counter: REGISTRY.unregister(counter),
 )
+
+
+def record_llm_call_stats(stats: LLMCallStats) -> None:
+    llm_call_counter.labels(stats.model).inc()
+    for token_type, value in (
+        ("input", stats.tokens.input),
+        ("output", stats.tokens.output),
+        ("cache_read", stats.tokens.cache_read),
+        ("total", stats.tokens.total),
+    ):
+        llm_token_counter.labels(stats.model, token_type).inc(value)
+    llm_cost_usd_counter.labels(stats.model).inc(stats.cost_usd)
+    for function_name in stats.functions:
+        llm_function_call_counter.labels(stats.model, function_name).inc()
+
+
+def record_llm_message_stats(model: str, stats: MessageStats) -> None:
+    for message_type, value in (
+        ("user", stats.user),
+        ("assistant", stats.assistant),
+        ("tool_call", stats.tool_calls),
+        ("tool_result", stats.tool_results),
+    ):
+        llm_message_counter.labels(model, message_type).inc(value)

@@ -1,14 +1,16 @@
+from typing import Any
 from collections.abc import Sequence
 
 from entari_plugin_user import UserSession
 
 from .manager import LLMSessionManager
 from miraita.providers.llm._jsondata import get_default_model
-from miraita.providers.llm.config import _conf, get_model_id
-from miraita.providers.llm.model import LLMSession
+from miraita.providers.llm.config import ScopedModel, _conf, get_model_config
+from miraita.providers.llm.exception import ModelNotFoundError
+from miraita.providers.llm.session import SessionInfo
 
 
-def _parse_session_id(choice: str, rows: Sequence[LLMSession]) -> str | None:
+def _parse_session_id(choice: str, rows: Sequence[SessionInfo]) -> str | None:
     text = choice.strip()
     if not text:
         return None
@@ -23,7 +25,7 @@ def _parse_session_id(choice: str, rows: Sequence[LLMSession]) -> str | None:
     return None
 
 
-def render_session_list(rows: Sequence[LLMSession]) -> str:
+def render_session_list(rows: Sequence[SessionInfo]) -> str:
     lines = [f"会话列表（共 {len(rows)} 个）"]
     for idx, row in enumerate(rows, 1):
         flag = " [当前]" if row.is_active else ""
@@ -31,19 +33,81 @@ def render_session_list(rows: Sequence[LLMSession]) -> str:
     return "\n".join(lines)
 
 
-def render_model_list() -> str:
-    default_model = get_default_model()
-    lines = [f"模型列表（共 {len(_conf.models)} 个）"]
-    for model in _conf.models:
-        model_id = get_model_id(model)
-        target = f" -> {model.name}" if model.alias else ""
-        is_default = " [默认]" if default_model == model_id else ""
-        lines.append(f"- {model_id}{target}{is_default}")
+def render_session_info(info: dict[str, Any]) -> str:
+    created_at = info["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+    messages = info["messages"]
+    tokens = info["tokens"]
+    return "\n".join(
+        [
+            "会话信息",
+            f"ID: {info['session_id']}",
+            f"话题: {info['topic']}",
+            f"创建时间: {created_at}",
+            f"模型: {info['model']}",
+            (
+                "Messages: "
+                f"user={messages['user']} | "
+                f"assistant={messages['assistant']} | "
+                f"tool calls={messages['tool_calls']} | "
+                f"tool results={messages['tool_results']} | "
+                f"total={messages['total']}"
+            ),
+            (
+                "Tokens: "
+                f"input={tokens['input']} | "
+                f"output={tokens['output']} | "
+                f"cache read={tokens['cache_read']} | "
+                f"total={tokens['total']}"
+            ),
+            f"Cost: ${info['cost_usd']:.6f}",
+        ]
+    )
+
+
+def resolve_model_config(
+    model_name: str | None,
+    channel: str = "$default",
+) -> ScopedModel:
+    if model_name is None:
+        return get_model_config(None, channel)
+
+    configured = next(
+        (
+            model
+            for model in _conf.models
+            if not model.hide
+            and (model.name == model_name or model.alias == model_name)
+        ),
+        None,
+    )
+    if configured is None:
+        raise ModelNotFoundError(f"未找到模型: {model_name}")
+    return get_model_config(configured.name, channel)
+
+
+def render_model_list(
+    current_model: str | None = None,
+    channel: str = "$default",
+) -> str:
+    default_model = get_default_model(channel)
+    models = [model for model in _conf.models if not model.hide]
+    lines = [f"模型列表（共 {len(models)} 个）"]
+    for model in models:
+        alias = f" ({model.alias})" if model.alias else ""
+        line = f"- {model.name}{alias}"
+        flags: list[str] = []
+        if current_model in (model.name, model.alias):
+            flags.append("当前")
+        if default_model in (model.name, model.alias):
+            flags.append("默认")
+        if flags:
+            line += " " + " ".join(f"[{flag}]" for flag in flags)
+        lines.append(line)
     return "\n".join(lines)
 
 
 async def select_session(session: UserSession) -> str | None:
-    rows = await LLMSessionManager.list_sessions(session.user)
+    rows = await LLMSessionManager.list_sessions(session.user_id)
     if not rows:
         await session.send("暂无会话")
         return None

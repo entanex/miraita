@@ -1,5 +1,5 @@
 import inspect
-from typing import Annotated, Any, get_args
+from typing import Annotated, Any, TypeAlias, get_args
 
 from arclet.entari import MessageCreatedEvent
 from arclet.entari.config.dc_schema import _MISSING, SchemaGenerator
@@ -12,20 +12,19 @@ from tarina.generic import get_origin, origin_is_union
 from typing_extensions import Doc
 
 from ..log import logger
-from .._types import JSON_TYPE
+
+JSON_VALUE: TypeAlias = str | int | float | bool | None
+JSON_TYPE: TypeAlias = dict[str, "JSON_TYPE"] | list["JSON_TYPE"] | JSON_VALUE
 
 
 class LLMToolEvent:
-    __publisher__ = "tools_pub"
-
     def check_result(self, value: Any) -> Result[JSON_TYPE] | None:
-        if isinstance(value, str | int | float | bool | type(None) | list | dict):
+        if isinstance(value, (str, int, float, bool, type(None), list, dict)):
             return Result(value)
 
 
 tools_pub = define(LLMToolEvent, name="tools_pub")
 tools_pub.providers.extend(get_providers(MessageCreatedEvent))
-
 
 tools = []
 available_functions: dict[str, Subscriber[JSON_TYPE]] = {}

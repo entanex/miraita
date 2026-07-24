@@ -31,6 +31,7 @@ adapters = [
     "satori-python-adapter-satori>=0.4.0",
 ]
 llm = [
+    "agno>=2.8.1",
     "docstring-parser>=0.17.0",
     "litellm>=1.82.0",
 ]

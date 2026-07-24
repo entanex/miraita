@@ -32,6 +32,7 @@ async def reload_config(event: ConfigReload):
     new_conf = config_model_validate(Config, event.value)
     _conf.models = new_conf.models
     _conf.prompt = new_conf.prompt
+    _conf.tools = new_conf.tools
 
 
 if _conf.enable_direct_message:
