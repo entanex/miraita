@@ -1,74 +1,28 @@
-from dataclasses import asdict, dataclass
-from typing import Any
+from __future__ import annotations
 
-import litellm
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass, field
+from typing import TYPE_CHECKING, Any
+
+from agno.metrics import ModelMetrics, RunMetrics
+from agno.models.message import Message
+from agno.models.response import ToolExecution
+from agno.run.agent import RunOutput
 from arclet.entari import keeping
 
 from miraita.providers.prometheus import Counter, REGISTRY
 
 from .stats import MessageStats, TokenStats, collect_cost, collect_token_stats
 
-
-def _get_value(obj: Any, key: str, default: Any = None) -> Any:
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default)
+if TYPE_CHECKING:
+    from .response import GenericResponse
 
 
-def _get_usage(response_obj: Any) -> TokenStats:
-    metrics = _get_value(response_obj, "metrics")
-    if metrics is not None:
-        return collect_token_stats(metrics)
-    usage = _get_value(response_obj, "usage") or {}
-    return collect_token_stats(usage)
-
-
-def _get_model(kwargs: Any, response_obj: Any) -> str:
-    model = _get_value(response_obj, "model") or _get_value(kwargs, "model")
-    return str(model or "unknown")
-
-
-def _iter_tool_calls(response_obj: Any):
-    choices = _get_value(response_obj, "choices", []) or []
-    if choices:
-        for choice in choices:
-            message = _get_value(choice, "message") or {}
-            tool_calls = _get_value(message, "tool_calls", []) or []
-            yield from tool_calls
-        return
-
-    for message in _get_value(response_obj, "messages", []) or []:
-        if _get_value(message, "from_history", False):
-            continue
-        tool_calls = _get_value(message, "tool_calls", []) or []
-        yield from tool_calls
-
-
-def _get_function_name(tool_call: Any) -> str:
-    function = _get_value(tool_call, "function") or {}
-    name = _get_value(function, "name")
-    return str(name or "unknown")
-
-
-def _calculate_cost(response_obj: Any, model: str) -> float:
-    metrics = _get_value(response_obj, "metrics")
-    usage = _get_value(response_obj, "usage") or {}
-    hidden_params = _get_value(response_obj, "_hidden_params") or {}
-    for source in (metrics, usage, hidden_params, response_obj):
-        cost = collect_cost(source)
-        if cost:
-            return cost
-
-    try:
-        return float(
-            litellm.completion_cost(
-                completion_response=response_obj,
-                model=model,
-            )
-            or 0
-        )
-    except Exception:
-        return 0.0
+@dataclass(frozen=True, slots=True)
+class ModelUsageStats:
+    model: str
+    tokens: TokenStats
+    cost_usd: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,27 +30,99 @@ class LLMCallStats:
     model: str
     tokens: TokenStats
     cost_usd: float
+    calls: int
     function_calls: int
     functions: list[str]
+    model_usage: tuple[ModelUsageStats, ...] = field(
+        default_factory=tuple,
+        repr=False,
+    )
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        result = asdict(self)
+        result.pop("model_usage")
+        return result
+
+
+def _iter_model_metrics(metrics: RunMetrics | None) -> Iterable[ModelMetrics]:
+    if metrics is None or not metrics.details:
+        return
+    for model_metrics in metrics.details.values():
+        yield from model_metrics
+
+
+def _collect_model_usage(
+    metrics: RunMetrics | None,
+    fallback_model: str,
+) -> tuple[ModelUsageStats, ...]:
+    usage = tuple(
+        ModelUsageStats(
+            model=model_metrics.id or fallback_model,
+            tokens=collect_token_stats(model_metrics),
+            cost_usd=collect_cost(
+                model_metrics,
+                model_metrics.id or fallback_model,
+            ),
+        )
+        for model_metrics in _iter_model_metrics(metrics)
+    )
+    if usage or metrics is None:
+        return usage
+    return (
+        ModelUsageStats(
+            model=fallback_model,
+            tokens=collect_token_stats(metrics),
+            cost_usd=collect_cost(metrics, fallback_model),
+        ),
+    )
+
+
+def _count_calls(messages: Iterable[Message]) -> int:
+    return max(
+        1,
+        sum(
+            1
+            for message in messages
+            if message.role == "assistant" and not message.from_history
+        ),
+    )
+
+
+def _get_functions(
+    tools: Iterable[ToolExecution],
+    messages: Iterable[Message],
+) -> list[str]:
+    functions = [str(tool.tool_name or "unknown") for tool in tools]
+    if functions:
+        return functions
+
+    for message in messages:
+        if message.from_history:
+            continue
+        for tool_call in message.tool_calls or []:
+            function = tool_call.get("function") or {}
+            functions.append(str(function.get("name") or "unknown"))
+    return functions
 
 
 def collect_llm_call_stats(
-    response_obj: Any,
-    kwargs: Any | None = None,
+    response_obj: RunOutput | GenericResponse[Any],
 ) -> LLMCallStats:
-    model = _get_model(kwargs or {}, response_obj)
-    functions = [
-        _get_function_name(tool_call) for tool_call in _iter_tool_calls(response_obj)
-    ]
+    metrics = response_obj.metrics
+    messages = response_obj.messages or []
+    model_usage = _collect_model_usage(metrics, str(response_obj.model or "unknown"))
+    model = str(
+        response_obj.model or (model_usage[0].model if model_usage else "unknown")
+    )
+    functions = _get_functions(response_obj.tools or [], messages)
     return LLMCallStats(
         model=model,
-        tokens=_get_usage(response_obj),
-        cost_usd=_calculate_cost(response_obj, model),
+        tokens=collect_token_stats(metrics),
+        cost_usd=collect_cost(metrics, model),
+        calls=_count_calls(messages),
         function_calls=len(functions),
         functions=functions,
+        model_usage=model_usage,
     )
 
 
@@ -152,15 +178,24 @@ llm_function_call_counter = keeping(
 
 
 def record_llm_call_stats(stats: LLMCallStats) -> None:
-    llm_call_counter.labels(stats.model).inc()
-    for token_type, value in (
-        ("input", stats.tokens.input),
-        ("output", stats.tokens.output),
-        ("cache_read", stats.tokens.cache_read),
-        ("total", stats.tokens.total),
-    ):
-        llm_token_counter.labels(stats.model, token_type).inc(value)
-    llm_cost_usd_counter.labels(stats.model).inc(stats.cost_usd)
+    llm_call_counter.labels(stats.model).inc(stats.calls)
+    usage = stats.model_usage or (
+        ModelUsageStats(stats.model, stats.tokens, stats.cost_usd),
+    )
+    for model_usage in usage:
+        for token_type, value in (
+            ("input", model_usage.tokens.input),
+            ("output", model_usage.tokens.output),
+            ("cache_read", model_usage.tokens.cache_read),
+            ("cache_write", model_usage.tokens.cache_write),
+            ("reasoning", model_usage.tokens.reasoning),
+            ("audio_input", model_usage.tokens.audio_input),
+            ("audio_output", model_usage.tokens.audio_output),
+            ("audio_total", model_usage.tokens.audio_total),
+            ("total", model_usage.tokens.total),
+        ):
+            llm_token_counter.labels(model_usage.model, token_type).inc(value)
+        llm_cost_usd_counter.labels(model_usage.model).inc(model_usage.cost_usd)
     for function_name in stats.functions:
         llm_function_call_counter.labels(stats.model, function_name).inc()
 

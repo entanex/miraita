@@ -1,32 +1,33 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any
+
+import litellm
+from agno.metrics import BaseMetrics, ModelMetrics
+from agno.models.message import Message
 
 
-def _get_value(obj: Any, key: str, default: Any = None) -> Any:
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default)
+def _iter_model_metrics(source: BaseMetrics) -> Iterable[ModelMetrics]:
+    details = getattr(source, "details", None)
+    if not details:
+        return
+    for model_metrics in details.values():
+        yield from model_metrics
 
 
-def _to_int(value: Any) -> int:
+def _estimate_cost(model: str, metrics: BaseMetrics) -> float:
+    if not model:
+        return 0.0
     try:
-        return int(value or 0)
-    except (TypeError, ValueError):
-        return 0
-
-
-def _first_int(obj: Any, *keys: str) -> int:
-    fallback = 0
-    for key in keys:
-        value = _get_value(obj, key)
-        if value is None:
-            continue
-        parsed = _to_int(value)
-        if parsed:
-            return parsed
-        fallback = parsed
-    return fallback
+        input_cost, output_cost = litellm.cost_per_token(
+            model=model,
+            prompt_tokens=metrics.input_tokens,
+            completion_tokens=metrics.output_tokens,
+            cache_creation_input_tokens=metrics.cache_write_tokens,
+            cache_read_input_tokens=metrics.cache_read_tokens,
+        )
+    except Exception:
+        return 0.0
+    return float(input_cost + output_cost)
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,28 +51,32 @@ class TokenStats:
     input: int = 0
     output: int = 0
     cache_read: int = 0
+    cache_write: int = 0
+    reasoning: int = 0
+    audio_input: int = 0
+    audio_output: int = 0
+    audio_total: int = 0
     total: int = 0
 
 
-def collect_message_stats(messages: Iterable[Any] | None) -> MessageStats:
+def collect_message_stats(messages: Iterable[Message] | None) -> MessageStats:
     user = 0
     assistant = 0
     tool_calls = 0
     tool_results = 0
 
     for message in messages or ():
-        if _get_value(message, "from_history", False):
+        if message.from_history:
             continue
 
-        role = str(_get_value(message, "role", "") or "")
-        calls = _get_value(message, "tool_calls", []) or []
+        calls = message.tool_calls or []
         call_count = len(calls)
 
-        if role == "user":
+        if message.role == "user":
             user += 1
-        elif role == "assistant":
+        elif message.role == "assistant":
             assistant += 1
-        elif role == "tool":
+        elif message.role == "tool":
             tool_results += call_count or 1
 
         tool_calls += call_count
@@ -84,83 +89,47 @@ def collect_message_stats(messages: Iterable[Any] | None) -> MessageStats:
     )
 
 
-def collect_token_stats(source: Any) -> TokenStats:
-    input_tokens = _first_int(source, "input_tokens", "prompt_tokens")
-    output_tokens = _first_int(source, "output_tokens", "completion_tokens")
-    cache_read_tokens = _first_int(
-        source,
-        "cache_read_tokens",
-        "cache_read_input_tokens",
-        "cached_tokens",
-    )
+def collect_token_stats(source: BaseMetrics | None) -> TokenStats:
+    if source is None:
+        return TokenStats()
 
-    if not cache_read_tokens:
-        details = _get_value(source, "input_tokens_details") or _get_value(
-            source,
-            "prompt_tokens_details",
-        )
-        cache_read_tokens = _first_int(
-            details or {},
-            "cached_tokens",
-            "cache_read_tokens",
-        )
-
-    total_tokens = _first_int(source, "total_tokens")
-    if not total_tokens:
-        total_tokens = input_tokens + output_tokens
-
+    input_tokens = source.input_tokens or 0
+    output_tokens = source.output_tokens or 0
+    audio_input_tokens = source.audio_input_tokens or 0
+    audio_output_tokens = source.audio_output_tokens or 0
     return TokenStats(
         input=input_tokens,
         output=output_tokens,
-        cache_read=cache_read_tokens,
-        total=total_tokens,
+        cache_read=source.cache_read_tokens or 0,
+        cache_write=source.cache_write_tokens or 0,
+        reasoning=source.reasoning_tokens or 0,
+        audio_input=audio_input_tokens,
+        audio_output=audio_output_tokens,
+        audio_total=source.audio_total_tokens
+        or audio_input_tokens + audio_output_tokens,
+        total=source.total_tokens or input_tokens + output_tokens,
     )
 
 
-def collect_cost(source: Any) -> float:
-    for key in ("cost", "cost_usd", "response_cost"):
-        value = _get_value(source, key)
-        if value is None:
-            continue
-        try:
-            return float(value or 0)
-        except (TypeError, ValueError):
-            continue
-    return 0.0
+def collect_cost(source: BaseMetrics | None, model: str | None = None) -> float:
+    if source is None:
+        return 0.0
+    if source.cost is not None:
+        return float(source.cost)
+
+    model_metrics = list(_iter_model_metrics(source))
+    if model_metrics:
+        return sum(
+            float(metrics.cost)
+            if metrics.cost is not None
+            else _estimate_cost(metrics.id, metrics)
+            for metrics in model_metrics
+        )
+    return _estimate_cost(model or "", source)
 
 
-def collect_session_usage(session: Any) -> tuple[TokenStats, float]:
-    session_data = _get_value(session, "session_data") or {}
-    session_metrics = _get_value(session_data, "session_metrics")
-    if session_metrics:
-        sources = [session_metrics]
-    else:
-        sources = [
-            metrics
-            for run in (_get_value(session, "runs") or [])
-            if (metrics := _get_value(run, "metrics")) is not None
-        ]
-
-    input_tokens = 0
-    output_tokens = 0
-    cache_read_tokens = 0
-    total_tokens = 0
-    cost_usd = 0.0
-
-    for source in sources:
-        tokens = collect_token_stats(source)
-        input_tokens += tokens.input
-        output_tokens += tokens.output
-        cache_read_tokens += tokens.cache_read
-        total_tokens += tokens.total
-        cost_usd += collect_cost(source)
-
-    return (
-        TokenStats(
-            input=input_tokens,
-            output=output_tokens,
-            cache_read=cache_read_tokens,
-            total=total_tokens,
-        ),
-        cost_usd,
-    )
+def collect_session_usage(
+    metrics: BaseMetrics | None,
+    model: str | None = None,
+) -> tuple[TokenStats, float]:
+    return collect_token_stats(metrics), collect_cost(metrics, model)

@@ -14,9 +14,7 @@ from launart.status import Phase
 from ._callback import TokenUsageHandler
 from .config import _conf, get_model_config
 from .response import GenericResponse, prepare_output_schema
-from .metrics import record_llm_message_stats
 from .session import AgnoSessionStore, SessionInfo
-from .stats import collect_message_stats
 from .tools.bridge import get_agno_tools
 
 TOutput = TypeVar("TOutput")
@@ -201,16 +199,16 @@ class LLMService(Service):
 
         agent = Agent(**agent_kwargs)
         if stream:
-            return GenericResponse.from_stream(agent.arun(message, stream=True))
+            return GenericResponse.from_stream(
+                agent.arun(message, stream=True, yield_run_output=True),
+                on_finish=self.usage_handler.record,
+            )
 
         result = await agent.arun(message)
         if result.status is RunStatus.error:
             raise RuntimeError(str(result.content or "Agno agent run failed"))
 
-        record_llm_message_stats(
-            str(result.model or model_config.name),
-            collect_message_stats(result.messages),
-        )
+        self.usage_handler.record(result)
 
         return GenericResponse.from_run_output(
             result,
@@ -248,7 +246,6 @@ class LLMService(Service):
     async def launch(self, manager: Launart) -> None:
         async with self.stage("preparing"):
             litellm.drop_params = True
-            litellm.callbacks = [self.usage_handler]
             self.start_time = time.time()
             db_path = local_data.get_data_file("llm", "agno.db")
             self._db = AsyncSqliteDb(db_file=str(db_path))

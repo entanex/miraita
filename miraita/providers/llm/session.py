@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import uuid4
 
+from agno.agent import Agent
 from agno.db.base import SessionType
 from agno.db.sqlite import AsyncSqliteDb
 from agno.session.agent import AgentSession
@@ -45,6 +47,7 @@ class AgnoSessionStore:
     def __init__(self, db: AsyncSqliteDb, agent_id: str) -> None:
         self.db = db
         self.agent_id = agent_id
+        self._metrics_agent = Agent(id=agent_id, db=db)
 
     async def create(self, user_id: int | str, model: str) -> SessionInfo:
         user_id = str(user_id)
@@ -69,7 +72,7 @@ class AgnoSessionStore:
             session.session_id,
             session.created_at or int(time.time()),
         )
-        return self._to_info(session, session.session_id)
+        return await self._to_info(session, session.session_id)
 
     async def get(
         self,
@@ -85,7 +88,7 @@ class AgnoSessionStore:
             user_id=user_id,
         )
         if isinstance(session, AgentSession):
-            return self._to_info(session, current_id)
+            return await self._to_info(session, current_id)
         if pointer is not None and pointer.session_id == session_id:
             return self._pending_info(
                 user_id,
@@ -100,7 +103,9 @@ class AgnoSessionStore:
         pointer = get_current_session(user_id)
         current_id = pointer.session_id if pointer is not None else None
         sessions = await self._get_user_sessions(user_id)
-        result = [self._to_info(session, current_id) for session in sessions]
+        result = await asyncio.gather(
+            *(self._to_info(session, current_id) for session in sessions)
+        )
         if pointer is not None and all(
             session.session_id != pointer.session_id for session in sessions
         ):
@@ -177,7 +182,11 @@ class AgnoSessionStore:
             rows = rows[0]
         return [session for session in rows if isinstance(session, AgentSession)]
 
-    def _to_info(self, session: AgentSession, current_id: str | None) -> SessionInfo:
+    async def _to_info(
+        self,
+        session: AgentSession,
+        current_id: str | None,
+    ) -> SessionInfo:
         summary = session.summary
         summary_text = summary.summary.strip() if summary and summary.summary else None
         if summary and summary.topics:
@@ -188,13 +197,17 @@ class AgnoSessionStore:
             topic = "新对话"
         topic = topic[:24] or "新对话"
 
+        model = get_session_model(session.session_id) or self._stored_model(session)
+        session_metrics = await self._metrics_agent.aget_session_metrics(
+            session.session_id
+        )
         messages = collect_message_stats(session.get_messages())
-        tokens, cost_usd = collect_session_usage(session)
+        tokens, cost_usd = collect_session_usage(session_metrics, model)
         return SessionInfo(
             session_id=session.session_id,
             user_id=str(session.user_id or ""),
             topic=topic,
-            model=get_session_model(session.session_id) or self._stored_model(session),
+            model=model,
             is_active=session.session_id == current_id,
             messages=messages,
             tokens=tokens,

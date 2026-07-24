@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator, Callable
 from dataclasses import is_dataclass
-from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
+from typing import Any, Generic, Literal, TypeVar, cast
 
+from agno.run.agent import RunOutput
 from pydantic import BaseModel, TypeAdapter, ValidationError
-
-if TYPE_CHECKING:
-    from agno.run.agent import RunOutput
 
 TOutput = TypeVar("TOutput")
 _OUTPUT_UNSET = object()
@@ -109,6 +107,12 @@ class GenericResponse(Generic[TOutput]):
             return self._run_output.metrics
         return None
 
+    @property
+    def tools(self) -> list:
+        if self._run_output is not None:
+            return self._run_output.tools or []
+        return []
+
     def stream(self) -> AsyncIterator[Any]:
         if self._stream is not None:
             return self._stream
@@ -136,5 +140,19 @@ class GenericResponse(Generic[TOutput]):
     def from_stream(
         cls,
         stream: AsyncIterator[Any],
+        *,
+        on_finish: Callable[[RunOutput], None] | None = None,
     ) -> GenericResponse[Any]:
-        return cls(stream=stream)
+        response = cls()
+
+        async def tracked_stream() -> AsyncIterator[Any]:
+            async for event in stream:
+                if isinstance(event, RunOutput):
+                    response._run_output = event
+                    if on_finish is not None:
+                        on_finish(event)
+                    continue
+                yield event
+
+        response._stream = tracked_stream()
+        return response
