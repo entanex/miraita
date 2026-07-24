@@ -259,7 +259,7 @@ async def zssm(content: command.Match[MessageChain], ctx: Contexts, session: Ses
     keywords = response.output.keyword
     output = response.output.output
 
-    result = MessageChain.of(f"关键词：{' | '.join(keywords)}\n\n{output}")
+    result = MessageChain.of(f"关键词：{' | '.join(keywords)}<br/><br/>{output}")
     if stats := collect_llm_call_stats(response):
         result.append(
             Argot(
