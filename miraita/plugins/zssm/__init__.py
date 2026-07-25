@@ -5,6 +5,7 @@ from arclet.alconna import Namespace, config as alc_config
 from arclet.entari import Image, MessageChain, Session, command, metadata
 from arclet.entari.const import ITEM_MESSAGE_REPLY
 from arclet.letoderea import Contexts
+from entari_plugin_user import UserSession
 
 from miraita.utils.reaction import with_reaction
 from miraita.providers.argot import Argot, on_argot
@@ -213,7 +214,9 @@ class Output:
 
 @command.command("zssm [...content]")
 @with_reaction
-async def zssm(content: command.Match[MessageChain], ctx: Contexts, session: Session):
+async def zssm(
+    content: command.Match[MessageChain], ctx: Contexts, session: UserSession
+):
     user_prompt = ""
     img_chain: MessageChain[Image] = MessageChain([])
 
@@ -241,6 +244,7 @@ async def zssm(content: command.Match[MessageChain], ctx: Contexts, session: Ses
         response = await llm.generate(
             user_prompt,
             {"platform": session.account.platform},
+            session=session,
             system=SYSTEM_PROMPT,
             output=Output,
         )

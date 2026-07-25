@@ -9,6 +9,7 @@ from entari_plugin_user import UserSession
 
 from miraita.providers.llm.config import get_model_config
 from miraita.providers.llm.event import LLMCollectVariableEvent
+from miraita.providers.llm.memory import memory_settings, UserMemory
 from miraita.providers.llm.service import llm
 from miraita.providers.llm.session import SessionInfo
 
@@ -53,6 +54,22 @@ class LLMSessionManager:
         return await llm.session_store.list(user_id)
 
     @classmethod
+    async def memory_enabled(cls, user_id: int) -> bool:
+        return await memory_settings.is_enabled(user_id)
+
+    @classmethod
+    async def set_memory_enabled(cls, user_id: int, enabled: bool) -> None:
+        await memory_settings.set_enabled(user_id, enabled)
+
+    @classmethod
+    async def get_memories(cls, user_id: int) -> list[UserMemory]:
+        return await llm.get_user_memories(user_id)
+
+    @classmethod
+    async def reset_memories(cls, user_id: int) -> None:
+        await llm.clear_user_memories(user_id)
+
+    @classmethod
     async def chat(
         cls,
         user_prompt: MessageChain,
@@ -63,6 +80,7 @@ class LLMSessionManager:
         new: bool = False,
     ) -> str:
         user_id = session.user_id
+        memory_enabled = await cls.memory_enabled(user_id)
         llm_session = None if new else await llm.session_store.current(user_id)
         if llm_session is None:
             selected_model = (
@@ -99,6 +117,7 @@ class LLMSessionManager:
             variables,
             session=llm_session,
             model=selected_model,
+            memory_enabled=memory_enabled,
         )
         final_answer = response.content or ""
         if not final_answer:

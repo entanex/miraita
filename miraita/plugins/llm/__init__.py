@@ -22,6 +22,7 @@ from miraita.providers.llm.config import get_model_config, get_model_id
 from . import chat as chat
 from .manager import LLMSessionManager
 from .utils import (
+    render_memory_list,
     render_model_list,
     render_session_list,
     render_session_info,
@@ -86,10 +87,20 @@ llm_alc = Alconna(
         dest="model_cmd",
         help_text="查看模型信息",
     ),
+    Subcommand(
+        "memory",
+        Subcommand("enable", help_text="启用用户记忆"),
+        Subcommand("disable", help_text="停用用户记忆"),
+        Subcommand("view", help_text="查看用户记忆"),
+        Subcommand("reset", alias="clear", help_text="清除用户记忆"),
+        help_text="管理用户记忆",
+    ),
     meta=CommandMeta(
         description="LLM 聊天",
         usage="/llm [内容] [-m [MODEL]] [-n] | /llm <子指令>",
-        example="/llm hello\n/llm resume\n/llm switch gpt\n/llm model gpt",
+        example=(
+            "/llm hello\n/llm resume\n/llm switch gpt\n/llm model\n/llm memory enable"
+        ),
     ),
     namespace=ns,
 )
@@ -213,7 +224,11 @@ async def list_sessions(session: UserSession):
     if not rows:
         return BLOCK.finish("暂无会话")
 
-    return BLOCK.finish(render_session_list(rows))
+    return BLOCK.finish(
+        render_session_list(rows)
+        + "<button type='input' text='/llm session'>查看当前会话</button>"
+        "<button type='input' text='/llm resume'>切换会话</button>"
+    )
 
 
 @llm_disp.assign("switch", priority=20)
@@ -244,20 +259,82 @@ async def switch_model(
     return BLOCK.finish(f"已切换当前频道模型为: {model_id}")
 
 
+@llm_disp.assign("memory", priority=20)
+async def memory_info(session: UserSession):
+    enabled = await LLMSessionManager.memory_enabled(session.user_id)
+    if not enabled:
+        return BLOCK.finish(
+            "记忆功能尚未启用，请使用 <code>/llm memory enable</code> 启用"
+            "<button type='input' text='/llm memory enable'>启用记忆功能</button>"
+        )
+    memories = await LLMSessionManager.get_memories(session.user_id)
+    return BLOCK.finish(
+        render_memory_list(memories)
+        + "<button type='input' text='/llm memory reset'>重置记忆</button>"
+    )
+
+
+@llm_disp.assign("memory.enable")
+async def enable_memory(session: UserSession):
+    enabled = await LLMSessionManager.memory_enabled(session.user_id)
+    if not enabled:
+        await LLMSessionManager.set_memory_enabled(session.user_id, True)
+    return BLOCK.finish("记忆功能已启用")
+
+
+@llm_disp.assign("memory.disable")
+async def disable_memory(session: UserSession):
+    enabled = await LLMSessionManager.memory_enabled(session.user_id)
+    if enabled:
+        await LLMSessionManager.set_memory_enabled(session.user_id, False)
+    return BLOCK.finish("记忆功能已停用")
+
+
+@llm_disp.assign("memory.view")
+async def view_memory(session: UserSession):
+    memories = await LLMSessionManager.get_memories(session.user_id)
+    return BLOCK.finish(
+        render_memory_list(memories)
+        + "<button type='input' text='/llm memory reset'>重置记忆</button>"
+    )
+
+
+@llm_disp.assign("memory.reset")
+async def reset_memory(session: UserSession):
+    await LLMSessionManager.reset_memories(session.user_id)
+    return BLOCK.finish("记忆已清除")
+
+
 @llm_disp.assign("model_cmd", priority=20)
 async def model_info(session: UserSession, model: command.Match[str]):
+    selected_model = model.result if model.available else None
+    if selected_model is None:
+        info = await LLMSessionManager.get_session_info(session.user_id)
+        selected_model = info["model"] if info else None
     try:
-        conf = resolve_model_config(
-            model.result if model.available else None,
-            session.channel.id,
-        )
+        conf = resolve_model_config(selected_model, session.channel.id)
     except ModelNotFoundError as e:
         return BLOCK.finish(str(e))
-    return BLOCK.finish(f"当前模型：{conf.name}")
+    memory_enabled = await LLMSessionManager.memory_enabled(session.user_id)
+    memory_state = "已启用" if memory_enabled else "已停用"
+    return BLOCK.finish(
+        f"当前模型：{conf.name}\n记忆：{memory_state}"
+        + (
+            "<button type='input' text='/llm memory view'>查看记忆列表</button>"
+            "<button type='input' text='/llm memory disable'>关闭记忆功能</button>"
+            if memory_enabled
+            else "<button type='input' text='/llm memory enable'>启用记忆功能</button>"
+        )
+    )
 
 
 @llm_disp.assign("model_cmd.list")
 async def list_models(session: UserSession):
     info = await LLMSessionManager.get_session_info(session.user_id)
     current_model = info["model"] if info else None
-    return BLOCK.finish(render_model_list(current_model, session.channel.id))
+    return BLOCK.finish(
+        render_model_list(current_model, session.channel.id)
+        + "<br/><br/>"
+        + "<button type='input' text='/llm model'>查看当前模型</button>"
+        "<button type='input' text='/llm switch'>切换模型</button>"
+    )

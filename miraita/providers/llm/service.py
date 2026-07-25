@@ -4,15 +4,19 @@ from typing import Any, Literal, TypeVar, overload
 import litellm
 from agno.agent import Agent
 from agno.db.sqlite import AsyncSqliteDb
+from agno.db.schemas.memory import UserMemory
+from agno.memory import MemoryManager
 from agno.models.litellm import LiteLLM
 from agno.models.message import Message
 from agno.run.base import RunStatus
 from arclet.entari import add_service, local_data
 from launart import Launart, Service
 from launart.status import Phase
+from entari_plugin_user.models import UserSession
 
 from ._callback import TokenUsageHandler
 from .config import _conf, get_model_config
+from .memory import memory_settings
 from .response import GenericResponse, prepare_output_schema
 from .session import AgnoSessionStore, SessionInfo
 from .tools.bridge import get_agno_tools
@@ -32,6 +36,7 @@ class LLMService(Service):
         self.usage_handler = TokenUsageHandler(self)
         self._db: AsyncSqliteDb | None = None
         self._sessions: AgnoSessionStore | None = None
+        self._memory_manager: MemoryManager | None = None
 
     @property
     def required(self) -> set[str]:
@@ -47,12 +52,19 @@ class LLMService(Service):
             raise RuntimeError("Agno session store is not initialized")
         return self._sessions
 
+    @property
+    def memory_manager(self) -> MemoryManager:
+        if self._memory_manager is None:
+            raise RuntimeError("Agno memory manager is not initialized")
+        return self._memory_manager
+
     @overload
     async def generate(
         self,
         message: str | list[Message],
         variables: dict[str, Any] | None = None,
         *,
+        session: UserSession | None = None,
         stream: bool = False,
         system: str | None = None,
         model: str | None = None,
@@ -67,6 +79,7 @@ class LLMService(Service):
         message: str | list[Message],
         variables: dict[str, Any] | None = None,
         *,
+        session: UserSession | None = None,
         stream: bool = False,
         system: str | None = None,
         model: str | None = None,
@@ -81,6 +94,7 @@ class LLMService(Service):
         message: str | list[Message],
         variables: dict[str, Any] | None = None,
         *,
+        session: UserSession | None = None,
         stream: bool = False,
         system: str | None = None,
         model: str | None = None,
@@ -94,6 +108,7 @@ class LLMService(Service):
         message: str | list[Message],
         variables: dict[str, Any] | None = None,
         *,
+        session: UserSession | None = None,
         stream: bool = False,
         system: str | None = None,
         model: str | None = None,
@@ -101,7 +116,11 @@ class LLMService(Service):
         ignore_user_prompt: bool = False,
         **kwargs: Any,
     ) -> GenericResponse[Any]:
-        """Generate a stateless LLM response through an Agno Agent."""
+        """Generate an LLM response with optional user-scoped memory."""
+        user_id = session.user_id if session is not None else None
+        memory_enabled = (
+            await memory_settings.is_enabled(user_id) if user_id is not None else False
+        )
         return await self._run_agent(
             message,
             variables,
@@ -109,7 +128,9 @@ class LLMService(Service):
             system=system,
             model=model,
             output=output,
-            session=None,
+            session_info=None,
+            user_id=user_id,
+            memory_enabled=memory_enabled,
             ignore_user_prompt=ignore_user_prompt,
             request_params=kwargs,
         )
@@ -121,6 +142,7 @@ class LLMService(Service):
         *,
         session: SessionInfo,
         model: str | None = None,
+        memory_enabled: bool = False,
     ) -> GenericResponse[None]:
         """Generate a persisted response for Entari's chat session manager."""
         return await self._run_agent(
@@ -130,7 +152,9 @@ class LLMService(Service):
             system=None,
             model=model,
             output=None,
-            session=session,
+            session_info=session,
+            user_id=session.user_id,
+            memory_enabled=memory_enabled,
             ignore_user_prompt=False,
             request_params={},
         )
@@ -144,7 +168,9 @@ class LLMService(Service):
         system: str | None,
         model: str | None,
         output: OutputType | None,
-        session: SessionInfo | None,
+        session_info: SessionInfo | None,
+        user_id: int | str | None,
+        memory_enabled: bool,
         ignore_user_prompt: bool,
         request_params: dict[str, Any],
     ) -> GenericResponse[Any]:
@@ -185,14 +211,29 @@ class LLMService(Service):
             "tools": get_agno_tools(),
             "markdown": False,
         }
+
         if output_schema is not None:
             agent_kwargs["output_schema"] = output_schema
             agent_kwargs["use_json_mode"] = True
-        if session is not None:
+
+        resolved_user_id = session_info.user_id if session_info is not None else user_id
+        if resolved_user_id is not None:
+            agent_kwargs["user_id"] = str(resolved_user_id)
+            agent_kwargs["update_memory_on_run"] = memory_enabled
+            agent_kwargs["enable_agentic_memory"] = memory_enabled
+            agent_kwargs["add_memories_to_context"] = memory_enabled
+
+            if memory_enabled and self._db is not None:
+                agent_kwargs["db"] = self._db
+                agent_kwargs["memory_manager"] = MemoryManager(
+                    model=agno_model,
+                    db=self._db,
+                )
+
+        if session_info is not None:
             if self._db is not None:
                 agent_kwargs["db"] = self._db
-            agent_kwargs["session_id"] = session.session_id
-            agent_kwargs["user_id"] = session.user_id
+            agent_kwargs["session_id"] = session_info.session_id
             agent_kwargs["add_history_to_context"] = True
             agent_kwargs["enable_session_summaries"] = True
             agent_kwargs["add_session_summary_to_context"] = False
@@ -215,6 +256,13 @@ class LLMService(Service):
             structured=output_schema is not None,
             output_adapter=output_adapter,
         )
+
+    async def get_user_memories(self, user_id: int | str) -> list[UserMemory]:
+        memories = await self.memory_manager.aget_user_memories(user_id=str(user_id))
+        return memories or []
+
+    async def clear_user_memories(self, user_id: int | str) -> None:
+        await self.memory_manager.aclear_user_memories(user_id=str(user_id))
 
     async def vision(
         self,
@@ -250,6 +298,7 @@ class LLMService(Service):
             db_path = local_data.get_data_file("llm", "agno.db")
             self._db = AsyncSqliteDb(db_file=str(db_path))
             self._sessions = AgnoSessionStore(self._db, self.id)
+            self._memory_manager = MemoryManager(db=self._db)
 
         async with self.stage("blocking"):
             await manager.status.wait_for_sigexit()
@@ -257,6 +306,7 @@ class LLMService(Service):
         async with self.stage("cleanup"):
             if self._db is not None:
                 await self._db.db_engine.dispose()
+            self._memory_manager = None
 
 
 llm = LLMService()

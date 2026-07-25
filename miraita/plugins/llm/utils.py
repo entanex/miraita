@@ -3,11 +3,13 @@ from collections.abc import Sequence
 
 from entari_plugin_user import UserSession
 
-from .manager import LLMSessionManager
+from miraita.providers.llm.memory import UserMemory
 from miraita.providers.llm._jsondata import get_default_model
 from miraita.providers.llm.config import ScopedModel, _conf, get_model_config
 from miraita.providers.llm.exception import ModelNotFoundError
 from miraita.providers.llm.session import SessionInfo
+
+from .manager import LLMSessionManager
 
 
 def _parse_session_id(choice: str, rows: Sequence[SessionInfo]) -> str | None:
@@ -28,7 +30,7 @@ def _parse_session_id(choice: str, rows: Sequence[SessionInfo]) -> str | None:
 def render_session_list(rows: Sequence[SessionInfo]) -> str:
     lines = [f"会话列表（共 {len(rows)} 个）"]
     for idx, row in enumerate(rows, 1):
-        flag = " [当前]" if row.is_active else ""
+        flag = " （当前）" if row.is_active else ""
         lines.append(f"{idx}. {row.topic}{flag} | ID: {row.session_id}")
     return "\n".join(lines)
 
@@ -101,8 +103,19 @@ def render_model_list(
         if default_model in (model.name, model.alias):
             flags.append("默认")
         if flags:
-            line += " " + " ".join(f"[{flag}]" for flag in flags)
+            line += " " + " ".join(f"({flag})" for flag in flags)
         lines.append(line)
+    return "\n".join(lines)
+
+
+def render_memory_list(rows: Sequence[UserMemory]) -> str:
+    if not rows:
+        return "暂无记忆"
+
+    lines = [f"记忆列表（共 {len(rows)} 条）"]
+    for index, row in enumerate(rows, 1):
+        topics = f"「{', '.join(row.topics)}」" if row.topics else ""
+        lines.append(f"{index}. {row.memory}{topics}")
     return "\n".join(lines)
 
 
