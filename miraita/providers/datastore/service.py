@@ -21,7 +21,7 @@ class DatastoreService(Service):
 
     @property
     def stages(self) -> set[Phase]:
-        return {"blocking"}
+        return {"preparing", "blocking", "cleanup"}
 
     def __init__(self):
         super().__init__()
@@ -85,8 +85,14 @@ class DatastoreService(Service):
         return self._read_store().copy()
 
     async def launch(self, manager: Launart):
+        async with self.stage("preparing"):
+            pass
+
         async with self.stage("blocking"):
             await manager.status.wait_for_sigexit()
+
+        async with self.stage("cleanup"):
+            pass
 
 
 datastore = DatastoreService()
