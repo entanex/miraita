@@ -111,6 +111,8 @@ class LLMSessionManager:
         variables: dict[str, Any] = {}
         async for result in waterfall(collect_event, inherit_ctx=ctx):
             variables.update(result.value)
+        variables["session"] = session
+        variables["platform"] = session.internal.account.platform
 
         response = await llm._generate_for_session(
             [user_message],

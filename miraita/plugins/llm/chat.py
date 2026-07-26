@@ -31,6 +31,7 @@ async def reload_config(event: ConfigReload):
         return
     new_conf = config_model_validate(Config, event.value)
     _conf.models = new_conf.models
+    _conf.system = new_conf.system
     _conf.prompt = new_conf.prompt
     _conf.tools = new_conf.tools
 

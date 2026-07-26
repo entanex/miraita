@@ -180,11 +180,16 @@ class LLMService(Service):
 
         model_config = get_model_config(model)
         if system is not None:
-            instructions = system
+            selected_prompt = system
         elif ignore_user_prompt:
-            instructions = None
+            selected_prompt = None
         else:
-            instructions = model_config.prompt or _conf.prompt or None
+            selected_prompt = model_config.prompt or _conf.prompt or None
+
+        instructions = (
+            "\n\n".join(prompt for prompt in (_conf.system, selected_prompt) if prompt)
+            or None
+        )
 
         if variables:
             variable_instructions = "下列是用以辅助你思考回答的变量：\n" + "\n".join(

@@ -33,6 +33,8 @@ class Config(BasicConfModel):
     """
     base_url: str = "https://api.openai.com/v1"
     """OpenAI API 的全局接口地址。用作没有特定接口地址的模型的后备"""
+    system: str = ""
+    """始终应用于所有模型和调用的全局系统提示词，不会被其它 prompt 替代"""
     prompt: str = ""
     """全局提示词。用作没有特定提示词的模型的后备"""
     enable_direct_message: bool = False
