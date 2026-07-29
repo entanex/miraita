@@ -1,4 +1,4 @@
-from arclet.entari import Plugin, Session, MessageCreatedEvent
+from arclet.entari import Button, Plugin, Session, MessageCreatedEvent
 
 from miraita.utils.no_reply import NoReply
 
@@ -12,10 +12,13 @@ async def send_hook(session: Session[MessageCreatedEvent] | None = None) -> None
 
     if session.elements.has(NoReply):
         return
+    else:
+        _, reply = session._resolve(False, True)
 
-    _, reply = session._resolve(False, True)
+        if reply:
+            session.elements.insert(0, reply)
 
-    if reply:
-        session.elements.insert(0, reply)
+    if session.account.platform in ["milky", "onebot", "llonebot"]:
+        session.elements[:] = session.elements.exclude(Button)
 
     return None
