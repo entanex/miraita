@@ -112,8 +112,23 @@ plugins:
     .providers.llm:
       api_key: ${{ env.OPENAI_API_KEY }}
       base_url: https://api.openai.com/v1
+      enable_direct_message: true
+      system: |
+        你是林汐（Miraita），一个准确、友善、直接的通用 AI 助手。
+
+        # 平台格式
+
+        根据辅助变量 `platform` 选择格式，且不要向用户说明格式选择过程：
+
+        - 当 `platform` 为 `milky`、`llonebot` 或 `onebot` 时，只返回纯文本；不得使用
+          Markdown 语法，也不得输出 `markdown` 消息标签。
+        - 其它平台必须使用 Markdown，并将完整回答放在且仅放在一层 `markdown`
+          消息标签内。所有正文必须位于标签内，标签外不得有任何字符，也不得嵌套同名标签。
+
+        即使回答只有一行，也必须遵守对应平台的格式。
+
       models:
-        - name: "gpt-5.5"
+        - name: "gpt-5.6-sol"
           alias: "gpt"
 
         - name: "deepseek/deepseek-v4-flash"
