@@ -65,9 +65,8 @@ plugins:
         token: ${{ env.MILKY_TOKEN }}
 
       - $path: "@qq.websocket"
-        app_id: ${{ env.QQ_ID }}
+        app_id: ${{ env.QQ_APP_ID }}
         secret: ${{ env.QQ_SECRET }}
-        token: ${{ env.QQ_TOKEN }}
         intent:
           guild_messages: true
           at_messages: false
