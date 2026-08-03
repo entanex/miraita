@@ -16,7 +16,6 @@ from agno.tools.function import Function
 from arclet.letoderea.context import generate_contexts
 from arclet.letoderea.exceptions import ExitState, _ExitException
 
-from ..log import logger
 from .event import (
     LLMToolEvent,
     LLMToolContext,
@@ -34,7 +33,6 @@ def _build_agno_tool(name: str, context: LLMToolContext) -> Function:
     async def _wrapper(**kwargs: Any) -> str:
         event = LLMToolEvent(arguments=kwargs, context=context)
         tool_ctx = await generate_contexts(event, tools_pub.supplier)
-        logger.debug(f"Agno bridge calling tool: {name} with args: {kwargs}")
 
         try:
             resp = await sub.handle(tool_ctx)

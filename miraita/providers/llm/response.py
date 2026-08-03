@@ -31,6 +31,15 @@ def prepare_output_schema(
     )
 
 
+def _final_assistant_text(run_output: RunOutput) -> str | None:
+    for message in reversed(run_output.messages or []):
+        if message.role != "assistant" or message.from_history or message.tool_calls:
+            continue
+        if isinstance(message.content, str) and message.content:
+            return message.content
+    return None
+
+
 class GenericResponse(Generic[TOutput]):
     def __init__(
         self,
@@ -47,9 +56,13 @@ class GenericResponse(Generic[TOutput]):
 
     @property
     def content(self) -> str | TOutput | None:
-        if self._run_output is not None:
-            return self._run_output.content
-        return None
+        if self._run_output is None:
+            return None
+        if not self._structured:
+            final_text = _final_assistant_text(self._run_output)
+            if final_text is not None:
+                return final_text
+        return self._run_output.content
 
     @property
     def model(self) -> str | None:
