@@ -152,6 +152,13 @@ def llm_tool(
     *,
     instructions: ToolInstructions | None = None,
 ) -> Subscriber[Any] | Callable[[ToolCallable], Subscriber[Any]]:
+    """Register a model-callable tool.
+
+    Put capability, accepted inputs, and exclusions in the function docstring: that
+    description is only exposed when the tool is actually loaded. Reserve
+    ``instructions`` for this tool's unconditional runtime rules; never use it to route
+    to another optionally configured tool.
+    """
     dispatcher = get_plugin(1).dispatch(LLMToolEvent)
 
     def register(target: ToolCallable) -> Subscriber[Any]:
