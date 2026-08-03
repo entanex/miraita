@@ -15,7 +15,6 @@ dependencies = [
     "pillow>=11.3.0",
     "psutil>=7.0.0",
     "py-cpuinfo>=9.0.0",
-    "satori-python",
 ]
 
 [dependency-groups]
@@ -48,9 +47,6 @@ sentry = [
 
 [tool.uv.build-backend]
 module-root = ""
-
-[tool.uv.sources]
-satori-python = { git = "https://github.com/KomoriDev/satori-python.git", branch = "feat/adapter-wxclaw" }
 
 [tool.ruff]
 line-length = 88
