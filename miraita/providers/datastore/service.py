@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 class DatastoreService(Service):
-    id = "datastore"
+    id = "miraita/datastore"
     DEFAULT_STORE_FILE = "data.json"
 
     @property

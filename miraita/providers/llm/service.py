@@ -29,7 +29,7 @@ OutputType = Literal["json_object"] | type[Any] | dict[str, Any]
 
 
 class LLMService(Service):
-    id = "entari_plugin_llm"
+    id = "miriata/llm"
 
     def __init__(self) -> None:
         super().__init__()

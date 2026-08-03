@@ -8,7 +8,7 @@ from miraita.databases import Monetary as MonetaryModel
 
 
 class Monetary(Service):
-    id = "monetary"
+    id = "miriata/monetary"
 
     @property
     def required(self):
