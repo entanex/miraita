@@ -7,6 +7,8 @@ from .log import logger
 from ._jsondata import get_default_model
 from .exception import ModelNotFoundError
 
+_AGNO_TOOL_PREFIX = "agno.tools."
+
 
 class ScopedModel(BasicConfModel):
     name: str
@@ -42,7 +44,7 @@ class Config(BasicConfModel):
     models: list[ScopedModel] = model_field(default_factory=list)
     """配置模型及其各自设置的列表"""
     tools: dict[str, dict[str, Any]] = model_field(default_factory=dict)
-    """工具"""
+    """Entari 工具插件与 Agno Toolkit"""
 
     __required__ = "api_key"
 
@@ -67,7 +69,9 @@ class Config(BasicConfModel):
                 new_key = key[1:]
                 tool_config["$optional"] = True
 
-            if key.startswith("::"):
+            if key.startswith("::agno.tools."):
+                new_key = key[2:]
+            elif key.startswith("::"):
                 new_key = new_key.replace("::", "miraita.providers.llm.tools.builtins.")
 
             if tool_config.get("$disable") is True:
@@ -76,6 +80,22 @@ class Config(BasicConfModel):
             loaded_tools[new_key] = tool_config
 
         self.tools = loaded_tools
+
+    @property
+    def agno_tools(self) -> dict[str, dict[str, Any]]:
+        return {
+            key: value
+            for key, value in self.tools.items()
+            if key.startswith(_AGNO_TOOL_PREFIX)
+        }
+
+    @property
+    def entari_tools(self) -> dict[str, dict[str, Any]]:
+        return {
+            key: value
+            for key, value in self.tools.items()
+            if not key.startswith(_AGNO_TOOL_PREFIX)
+        }
 
     def __post_init__(self):
         self._reload_tools()

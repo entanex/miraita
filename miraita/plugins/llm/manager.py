@@ -1,17 +1,21 @@
+from contextlib import AsyncExitStack
 from dataclasses import asdict
 from typing import Any
 
 import litellm
+from agno.media import Image as AgnoImage
 from agno.models.message import Message
-from arclet.entari import Image, MessageChain, Text
+from arclet.entari import Image, MessageChain
 from arclet.letoderea import Contexts, waterfall
 from entari_plugin_user import UserSession
 
 from miraita.providers.llm.config import get_model_config
 from miraita.providers.llm.event import LLMCollectVariableEvent
-from miraita.providers.llm.memory import memory_settings, UserMemory
+from miraita.providers.llm.memory import UserMemory, memory_settings
 from miraita.providers.llm.service import llm
 from miraita.providers.llm.session import SessionInfo
+from miraita.providers.llm.tools import LLMToolContext, snapshot_tool_dependencies
+from miraita.providers.temp import temp
 
 
 class LLMSessionManager:
@@ -93,17 +97,7 @@ class LLMSessionManager:
             or model
             or get_model_config(None, session.channel.id).name
         )
-        content: list[dict[str, Any]] = []
-        if user_prompt.has(Text):
-            content.append({"type": "text", "text": user_prompt.extract_plain_text()})
-        if user_prompt.has(Image) and litellm.supports_vision(selected_model):
-            for image in user_prompt.include(Image):
-                content.append({"type": "image_url", "image_url": {"url": image.src}})
-        user_message = Message(
-            role="user",
-            content=content,
-            name=f"{session.user.name}({session.user.id})",
-        )
+        text = user_prompt.extract_plain_text()
 
         collect_event = LLMCollectVariableEvent(
             session.internal, llm_session, user_prompt
@@ -113,14 +107,49 @@ class LLMSessionManager:
             variables.update(result.value)
         variables["session"] = session
         variables["platform"] = session.internal.account.platform
+        tool_dependencies = snapshot_tool_dependencies(ctx)
 
-        response = await llm._generate_for_session(
-            [user_message],
-            variables,
-            session=llm_session,
-            model=selected_model,
-            memory_enabled=memory_enabled,
-        )
+        async with AsyncExitStack() as stack:
+            images: list[AgnoImage] = []
+            if user_prompt.has(Image) and litellm.supports_vision(selected_model):
+                for image in user_prompt.include(Image):
+                    downloaded = await stack.enter_async_context(
+                        temp.download(
+                            image.src,
+                            account=session.internal.account,
+                        )
+                    )
+                    mime_type = (
+                        downloaded.content_type
+                        if downloaded.content_type
+                        and downloaded.content_type.startswith("image/")
+                        else None
+                    )
+                    images.append(
+                        AgnoImage(
+                            filepath=downloaded.path,
+                            mime_type=mime_type,
+                        )
+                    )
+
+            tool_context = LLMToolContext(
+                user_message=user_prompt,
+                dependencies=tool_dependencies,
+            )
+            user_message = Message(
+                role="user",
+                content=text,
+                images=images or None,
+                name=f"{session.user.name}({session.user.id})",
+            )
+            response = await llm._generate_for_session(
+                [user_message],
+                variables,
+                session=llm_session,
+                model=selected_model,
+                memory_enabled=memory_enabled,
+                tool_context=tool_context,
+            )
         final_answer = response.content or ""
         if not final_answer:
             return "对话失败，请稍后再试"

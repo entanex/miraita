@@ -25,7 +25,7 @@ _suppress_litellm_logging()
 os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
 
 
-for tool in _conf.tools:
+for tool in _conf.entari_tools:
     plugin.load_plugin(tool)
 
 from .service import llm as llm

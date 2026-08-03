@@ -137,3 +137,18 @@ plugins:
         - name: "deepseek/deepseek-v4-pro"
           api_key: ${{ env.DEEPSEEK_API_KEY }}
           base_url: https://api.deepseek.com
+
+      tools:
+        ::file_processor: {}
+        ::webpage_processor: {}
+        ::agno.tools.calculator.CalculatorTools: {}
+        ::agno.tools.exa.ExaTools:
+          # https://docs.agno.com/tools/toolkits/search/exa
+          api_key: ${{ env.EXA_API_KEY }}
+          enable_search: true
+          enable_get_contents: true
+          enable_find_similar: true
+          enable_answer: true
+          enable_research: false
+          text: true
+          text_length_limit: 1000

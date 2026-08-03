@@ -1,25 +1,28 @@
 import time
 from typing import Any, Literal, TypeVar, overload
 
+from launart import Launart, Service
 import litellm
 from agno.agent import Agent
-from agno.db.sqlite import AsyncSqliteDb
-from agno.db.schemas.memory import UserMemory
 from agno.memory import MemoryManager
+from agno.run.base import RunStatus
+from arclet.entari import local_data, add_service
+from agno.db.sqlite import AsyncSqliteDb
+from launart.status import Phase
 from agno.models.litellm import LiteLLM
 from agno.models.message import Message
-from agno.run.base import RunStatus
-from arclet.entari import add_service, local_data
-from launart import Launart, Service
-from launart.status import Phase
+from agno.db.schemas.memory import UserMemory
 from entari_plugin_user.models import UserSession
 
-from ._callback import TokenUsageHandler
 from .config import _conf, get_model_config
 from .memory import memory_settings
+from .context import inject_context_messages
+from .session import SessionInfo, AgnoSessionStore
 from .response import GenericResponse, prepare_output_schema
-from .session import AgnoSessionStore, SessionInfo
+from ._callback import TokenUsageHandler
+from .tools.event import LLMToolContext, resolve_tool_context
 from .tools.bridge import get_agno_tools
+from .tools.loader import build_agno_tools, resolve_agno_tool_specs
 
 TOutput = TypeVar("TOutput")
 OutputType = Literal["json_object"] | type[Any] | dict[str, Any]
@@ -37,6 +40,7 @@ class LLMService(Service):
         self._db: AsyncSqliteDb | None = None
         self._sessions: AgnoSessionStore | None = None
         self._memory_manager: MemoryManager | None = None
+        self._agno_tool_specs = resolve_agno_tool_specs(_conf.agno_tools)
 
     @property
     def required(self) -> set[str]:
@@ -124,6 +128,7 @@ class LLMService(Service):
         return await self._run_agent(
             message,
             variables,
+            tool_context=None,
             stream=stream,
             system=system,
             model=model,
@@ -143,11 +148,13 @@ class LLMService(Service):
         session: SessionInfo,
         model: str | None = None,
         memory_enabled: bool = False,
+        tool_context: LLMToolContext | None = None,
     ) -> GenericResponse[None]:
         """Generate a persisted response for Entari's chat session manager."""
         return await self._run_agent(
             message,
             variables,
+            tool_context=tool_context,
             stream=False,
             system=None,
             model=model,
@@ -164,6 +171,7 @@ class LLMService(Service):
         message: str | list[Message],
         variables: dict[str, Any] | None,
         *,
+        tool_context: LLMToolContext | None,
         stream: bool,
         system: str | None,
         model: str | None,
@@ -209,12 +217,18 @@ class LLMService(Service):
             request_params=model_request_params or None,
         )
 
+        resolved_tool_context = resolve_tool_context(tool_context, variables)
+
         agent_kwargs: dict[str, Any] = {
             "id": self.id,
             "model": agno_model,
             "instructions": instructions,
-            "tools": get_agno_tools(),
+            "tools": [
+                *get_agno_tools(resolved_tool_context),
+                *build_agno_tools(self._agno_tool_specs),
+            ],
             "markdown": False,
+            "store_media": False,
         }
 
         if output_schema is not None:
@@ -244,13 +258,14 @@ class LLMService(Service):
             agent_kwargs["add_session_summary_to_context"] = False
 
         agent = Agent(**agent_kwargs)
+        model_input = await inject_context_messages(message, resolved_tool_context)
         if stream:
             return GenericResponse.from_stream(
-                agent.arun(message, stream=True, yield_run_output=True),
+                agent.arun(model_input, stream=True, yield_run_output=True),
                 on_finish=self.usage_handler.record,
             )
 
-        result = await agent.arun(message)
+        result = await agent.arun(model_input)
         if result.status is RunStatus.error:
             raise RuntimeError(str(result.content or "Agno agent run failed"))
 

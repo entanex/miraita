@@ -332,9 +332,9 @@ async def model_info(session: UserSession, model: command.Match[str]):
 async def list_models(session: UserSession):
     info = await LLMSessionManager.get_session_info(session.user_id)
     current_model = info["model"] if info else None
+
     return BLOCK.finish(
         render_model_list(current_model, session.channel.id)
-        + "<br/><br/>"
         + "<button type='input' text='/llm model'>查看当前模型</button>"
-        "<button type='input' text='/llm switch'>切换模型</button>"
+        + "<button type='input' text='/llm switch'>切换模型</button>"
     )

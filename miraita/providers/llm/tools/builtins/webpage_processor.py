@@ -1,20 +1,17 @@
 from launart import Launart
-from arclet.entari import plugin
 from entari_plugin_browser import PlaywrightService
 
 from miraita.providers.llm.log import logger
 
-from ..event import LLMToolEvent
-
-tools = plugin.dispatch(LLMToolEvent)
+from ..event import llm_tool
 
 
-@tools
+@llm_tool
 async def process_web_page(url: str) -> str | None:
-    """处理网页内容
+    """处理 HTML 网页内容；文件链接应使用 read_file，不要使用本工具。
 
     Args:
-        url: 网页 URL
+        url: HTML 网页 URL，不用于 PDF、Word、TXT 或 Markdown 文件。
 
     Returns:
         Optional[str]: 网页内容, 失败时返回 None
