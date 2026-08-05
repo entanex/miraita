@@ -1,0 +1,54 @@
+{
+  "name": "Miraita",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "UV_VERSION": "0.10.7"
+    }
+  },
+  "init": true,
+  "remoteUser": "vscode",
+  "postCreateCommand": "uv sync --all-groups --all-extras --locked",
+  "forwardPorts": [2310],
+  "portsAttributes": {
+    "2310": {
+      "label": "miraita",
+      "protocol": "http",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "codespaces": {
+        "openFiles": [
+            "README.md"
+        ]
+    },
+    "vscode": {
+        "settings": {
+          "python.analysis.diagnosticMode": "workspace",
+          "python.analysis.typeCheckingMode": "basic",
+          "[python]": {
+              "editor.defaultFormatter": "charliermarsh.ruff",
+              "editor.codeActionsOnSave": {
+                  "source.fixAll": "explicit",
+                  "source.organizeImports": "explicit"
+              }
+          },
+          "files.exclude": {
+              "**/__pycache__": true
+          },
+          "files.watcherExclude": {
+              "**/__pycache__": true
+          }
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml"
+      ]
+    }
+  }
+}
