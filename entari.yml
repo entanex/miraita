@@ -80,7 +80,7 @@ plugins:
 
     .plugins.sentry:
       dsn: ${{ env.SENTRY_DSN }}
-      environment: ${{ env.ENVIRONMENT }}   
+      environment: ${{ env.ENVIRONMENT }}
       default_integrations: true
       auto_enabling_integrations: true
       enable_tracing: false
@@ -97,6 +97,7 @@ plugins:
 
     .plugins.at-command:
       execute: llm
+      allow_arguments: true
 
     .plugins.repeater:
       on_repeat:

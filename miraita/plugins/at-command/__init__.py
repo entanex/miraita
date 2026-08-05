@@ -20,8 +20,10 @@ metadata(
     .if_(filter_.notice_me)
 )
 async def at_command(session: UserSession):
-    if session.internal.elements:
-        return
-
-    await command.execute(config.execute, session=session.internal)
+    message = (
+        f"{config.execute} {session.internal.elements}"
+        if config.allow_arguments
+        else config.execute
+    )
+    await command.execute(message, session=session.internal)
     return BLOCK
