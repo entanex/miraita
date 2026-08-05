@@ -5,12 +5,12 @@ description = "基于 Entari 开发，超可爱的林汐酱"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "arclet-entari[full,pydantic]>=0.18.4",
+    "arclet-entari[full,pydantic]>=0.18.6",
     "entari-plugin-browser>=0.6.1",
     "entari-plugin-database>=0.3.3",
     "entari-plugin-server>=0.7.3",
     "entari-plugin-permission>=0.1.0",
-    "entari-plugin-user>=0.1.5",
+    "entari-plugin-user>=0.2.0",
     "fastapi>=0.116.1",
     "pillow>=11.3.0",
     "psutil>=7.0.0",
