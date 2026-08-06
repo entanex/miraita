@@ -6,6 +6,11 @@ from typing import Any
 from agno.tools import Toolkit
 
 from ..log import logger
+from .limit import (
+    CALL_LIMIT_OPTION,
+    apply_function_call_limit,
+    get_call_limit,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,10 +18,18 @@ class AgnoToolSpec:
     path: str
     toolkit_type: type[Toolkit]
     options: dict[str, Any]
+    call_limit: int | None = None
 
     def build(self) -> Toolkit:
         try:
-            return self.toolkit_type(**self.options)
+            toolkit = self.toolkit_type(**self.options)
+            if self.call_limit is not None:
+                apply_function_call_limit(
+                    (*toolkit.functions.values(), *toolkit.async_functions.values()),
+                    self.path,
+                    self.call_limit,
+                )
+            return toolkit
         except Exception as exc:
             raise RuntimeError(f"初始化 Agno 工具 {self.path!r} 失败: {exc}") from exc
 
@@ -58,7 +71,11 @@ def resolve_agno_tool_specs(
         ):
             raise TypeError(f"{path!r} 不是 Agno Toolkit 子类")
 
-        specs.append(AgnoToolSpec(path, toolkit_type, dict(options)))
+        tool_options = dict(options)
+        call_limit = get_call_limit(path, tool_options)
+        tool_options.pop(CALL_LIMIT_OPTION, None)
+
+        specs.append(AgnoToolSpec(path, toolkit_type, tool_options, call_limit))
         logger.debug(f"Registered tool: {toolkit_type.__name__}")
 
     return tuple(specs)

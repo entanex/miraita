@@ -6,6 +6,7 @@ wraps each registered tool so Agno can invoke it, while the Entari event machine
 handles DI and lifecycle.
 """
 
+from collections.abc import Mapping
 from copy import deepcopy
 import json
 from typing import Any
@@ -22,6 +23,7 @@ from .event import (
     tools_pub,
     registered_tools,
 )
+from .limit import apply_function_call_limit
 
 
 def _build_agno_tool(name: str, context: LLMToolContext) -> Function:
@@ -87,7 +89,20 @@ def _build_agno_tool(name: str, context: LLMToolContext) -> Function:
 
 def get_agno_tools(
     context: LLMToolContext | None = None,
+    call_limits: Mapping[str, int] | None = None,
 ) -> list[Function]:
     """Return all registered Entari tools as Agno Functions."""
     tool_context = context or LLMToolContext()
-    return [_build_agno_tool(name, tool_context) for name in registered_tools]
+    functions: list[Function] = []
+    functions_by_plugin: dict[str, list[Function]] = {}
+
+    for name, registration in registered_tools.items():
+        function = _build_agno_tool(name, tool_context)
+        functions.append(function)
+        functions_by_plugin.setdefault(registration.plugin_id, []).append(function)
+
+    for plugin_id, plugin_functions in functions_by_plugin.items():
+        if call_limits is not None and (call_limit := call_limits.get(plugin_id)):
+            apply_function_call_limit(plugin_functions, plugin_id, call_limit)
+
+    return functions

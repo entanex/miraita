@@ -22,6 +22,7 @@ from .response import GenericResponse, prepare_output_schema
 from ._callback import TokenUsageHandler
 from .tools.event import LLMToolContext, resolve_tool_context
 from .tools.bridge import get_agno_tools
+from .tools.limit import resolve_call_limits
 from .tools.loader import build_agno_tools, resolve_agno_tool_specs
 
 TOutput = TypeVar("TOutput")
@@ -41,6 +42,7 @@ class LLMService(Service):
         self._sessions: AgnoSessionStore | None = None
         self._memory_manager: MemoryManager | None = None
         self._agno_tool_specs = resolve_agno_tool_specs(_conf.agno_tools)
+        self._entari_tool_call_limits = resolve_call_limits(_conf.entari_tools)
 
     @property
     def required(self) -> set[str]:
@@ -224,7 +226,7 @@ class LLMService(Service):
             "model": agno_model,
             "instructions": instructions,
             "tools": [
-                *get_agno_tools(resolved_tool_context),
+                *get_agno_tools(resolved_tool_context, self._entari_tool_call_limits),
                 *build_agno_tools(self._agno_tool_specs),
             ],
             "tool_call_limit": _conf.tool_call_limit,

@@ -146,6 +146,7 @@ plugins:
         ::webpage_processor: {}
         ::agno.tools.calculator.CalculatorTools: {}
         ::agno.tools.exa.ExaTools:
+          $call_limit: 1
           # https://docs.agno.com/tools/toolkits/search/exa
           api_key: ${{ env.EXA_API_KEY }}
           enable_search: true

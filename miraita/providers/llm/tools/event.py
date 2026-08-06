@@ -79,6 +79,7 @@ def llm_variable(name: str) -> Callable[[Contexts], Awaitable[Any]]:
 
 ToolInstructions: TypeAlias = str
 _TOOL_INSTRUCTIONS_ATTR = "__llm_tool_instructions__"
+_TOOL_PLUGIN_ID_ATTR = "__llm_tool_plugin_id__"
 
 
 def _is_json_type(value: Any) -> bool:
@@ -128,6 +129,7 @@ class RegisteredTool:
     subscriber: Subscriber[Any]
     schema: dict[str, Any]
     parameters: tuple[Param, ...]
+    plugin_id: str
     instructions: ToolInstructions | None
 
 
@@ -160,10 +162,12 @@ def llm_tool(
     to another optionally configured tool.
     """
     dispatcher = get_plugin(1).dispatch(LLMToolEvent)
+    plugin_id = dispatcher.plugin.id
 
     def register(target: ToolCallable) -> Subscriber[Any]:
         if instructions is not None:
             setattr(target, _TOOL_INSTRUCTIONS_ATTR, instructions)
+        setattr(target, _TOOL_PLUGIN_ID_ATTR, plugin_id)
         return cast(Subscriber[Any], dispatcher(target))
 
     return register(func) if func is not None else register
@@ -231,12 +235,20 @@ def _register_tool(_, sub: Subscriber[Any]):
     instructions = getattr(sub.callable_target, _TOOL_INSTRUCTIONS_ATTR, None)
     if not isinstance(instructions, str):
         instructions = None
+    plugin_id = getattr(
+        sub.callable_target,
+        _TOOL_PLUGIN_ID_ATTR,
+        sub.callable_target.__module__,
+    )
+    if not isinstance(plugin_id, str):
+        plugin_id = sub.callable_target.__module__
 
     name = sub.__name__
     registered_tools[name] = RegisteredTool(
         subscriber=sub,
         schema=tool_schema,
         parameters=parameters,
+        plugin_id=plugin_id,
         instructions=instructions,
     )
 
