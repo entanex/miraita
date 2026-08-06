@@ -25,5 +25,7 @@ async def at_command(session: UserSession):
         if config.allow_arguments
         else config.execute
     )
-    await command.execute(message, session=session.internal)
+    result = await command.execute(message, session=session.internal)
+    if result is not None:
+        await session.send(result)
     return BLOCK
