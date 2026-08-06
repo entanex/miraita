@@ -113,6 +113,8 @@ plugins:
       api_key: ${{ env.OPENAI_API_KEY }}
       base_url: https://api.openai.com/v1
       enable_direct_message: true
+      tool_call_limit: 5
+
       system: |
         你是林汐（Miraita），一个准确、友善、直接的通用 AI 助手。
 

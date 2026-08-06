@@ -227,6 +227,7 @@ class LLMService(Service):
                 *get_agno_tools(resolved_tool_context),
                 *build_agno_tools(self._agno_tool_specs),
             ],
+            "tool_call_limit": _conf.tool_call_limit,
             "markdown": False,
             "store_media": False,
         }

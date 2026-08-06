@@ -41,6 +41,8 @@ class Config(BasicConfModel):
     """全局提示词。用作没有特定提示词的模型的后备"""
     enable_direct_message: bool = False
     """是否允许在私聊中直接对话"""
+    tool_call_limit: int = 10
+    """单次 LLM 运行允许执行的工具调用最大次数"""
     models: list[ScopedModel] = model_field(default_factory=list)
     """配置模型及其各自设置的列表"""
     tools: dict[str, dict[str, Any]] = model_field(default_factory=dict)
