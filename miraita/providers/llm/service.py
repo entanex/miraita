@@ -317,9 +317,15 @@ class LLMService(Service):
     async def launch(self, manager: Launart) -> None:
         async with self.stage("preparing"):
             litellm.drop_params = True
-            self.start_time = time.time()
             db_path = local_data.get_data_file("llm", "agno.db")
+            self.start_time = time.time()
             self._db = AsyncSqliteDb(db_file=str(db_path))
+
+            await self._db._get_table(
+                table_type="memories",
+                create_table_if_not_found=True,
+            )
+
             self._sessions = AgnoSessionStore(self._db, self.id)
             self._memory_manager = MemoryManager(db=self._db)
 

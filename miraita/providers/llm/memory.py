@@ -1,5 +1,4 @@
 from agno.db.schemas.memory import UserMemory as UserMemory
-
 from entari_plugin_database import Base
 from entari_plugin_database import get_session as get_db_session
 from sqlalchemy import Boolean
